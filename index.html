@@ -589,6 +589,7 @@
             });
         }
 
+        // PERBAIKAN: AGREGASI OTOMATIS SELURUH OUTLET BERDASARKAN KODE ADMIN
         function syncDataFromDB() {
             if (appState.isAdmin) {
                 db.ref(`data/${targetAdminCode}`).on('value', snapshot => {
@@ -599,11 +600,21 @@
                     let combinedAktivitas = val.aktivitas || [];
                     let combinedTutupBuku = val.tutupBuku || [];
 
+                    // Mengambil dan menggabungkan data dari semua outlet cabang secara dinamis
                     if (val.outlets) {
                         Object.values(val.outlets).forEach(outletData => {
-                            if (outletData.penjualan) combinedPenjualan = combinedPenjualan.concat(outletData.penjualan);
-                            if (outletData.aktivitas) combinedAktivitas = combinedAktivitas.concat(outletData.aktivitas);
-                            if (outletData.tutupBuku) combinedTutupBuku = combinedTutupBuku.concat(outletData.tutupBuku);
+                            if (outletData.penjualan) {
+                                let pList = Array.isArray(outletData.penjualan) ? outletData.penjualan : Object.values(outletData.penjualan);
+                                combinedPenjualan = combinedPenjualan.concat(pList);
+                            }
+                            if (outletData.aktivitas) {
+                                let aList = Array.isArray(outletData.aktivitas) ? outletData.aktivitas : Object.values(outletData.aktivitas);
+                                combinedAktivitas = combinedAktivitas.concat(aList);
+                            }
+                            if (outletData.tutupBuku) {
+                                let tList = Array.isArray(outletData.tutupBuku) ? outletData.tutupBuku : Object.values(outletData.tutupBuku);
+                                combinedTutupBuku = combinedTutupBuku.concat(tList);
+                            }
                         });
                     }
 
@@ -640,7 +651,7 @@
 
         function saveDataToDB() {
             let dataPath = appState.isAdmin ? `data/${targetAdminCode}` : `data/${targetAdminCode}/outlets/${currentUser.uid}`;
-            db.ref(dataPath).set({
+            db.ref(dataPath).update({
                 config: appState.config,
                 penjualan: appState.dataPenjualan,
                 aktivitas: appState.dataAktivitas,
@@ -656,6 +667,18 @@
             }
             targetAdminCode = kode;
             db.ref('users/' + currentUser.uid).update({ followAdminCode: kode });
+            
+            // Daftarkan UID outlet ke direktori outlets admin secara aman
+            db.ref(`data/${kode}/outlets/${currentUser.uid}/config`).once('value', snap => {
+                if (!snap.exists()) {
+                    db.ref(`data/${kode}/outlets/${currentUser.uid}`).set({
+                        penjualan: [],
+                        aktivitas: [],
+                        tutupBuku: []
+                    });
+                }
+            });
+
             alert(`Berhasil terhubung dengan Kode Admin: ${kode}`);
             syncDataFromDB();
         }
@@ -706,7 +729,6 @@
             }
         }
 
-        // FUNGSI LOAD OUTLETS YANG SUDAH DIPERBAIKI (MENAMPILKAN NAMA ASLI OUTLET)
         function loadOutletsList() {
             const listEl = document.getElementById('drawerOutletList');
             listEl.innerHTML = `<p class="text-xs text-gray-500">Memuat outlet terhubung...</p>`;
@@ -975,10 +997,10 @@
                 return;
             }
             tbody.innerHTML = '';
-            appState.dataPenjualan.forEach(item => {
+            appState.dataPenjualan.forEach((item, index) => {
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-gray-50">
-                        <td class="p-2.5 font-medium">${item.no}</td>
+                        <td class="p-2.5 font-medium">${index + 1}</td>
                         <td class="p-2.5">${item.tgl}</td>
                         <td class="p-2.5">${item.sales}</td>
                         <td class="p-2.5">${item.bawaStr}</td>
@@ -1004,7 +1026,7 @@
                         <div>
                             <span class="font-bold ${badgeColor}">[${act.tipe === 'pengeluaran' ? 'Pengeluaran' : act.subTipe}]</span> 
                             <span class="font-semibold">${act.keterangan}</span>
-                            <div class="text-[10px] text-gray-500">${act.tgl} | Outlet: ${act.outlet}</div>
+                            <div class="text-[10px] text-gray-500">${act.tgl} | Outlet: ${act.outlet || 'Pusat'}</div>
                         </div>
                         <span class="font-bold ${badgeColor}">${act.tipe === 'pengeluaran' ? '-Rp ' + act.nominal.toLocaleString('id-ID') : act.pcs + ' Pcs'}</span>
                     </div>
