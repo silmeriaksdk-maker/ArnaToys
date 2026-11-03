@@ -397,7 +397,7 @@
                     </button>
                 </div>
 
-                <!-- BUKA FUNGSI ADMIN (UNTUK SWITCH KE ADMIN) -->
+                <!-- BUKA FUNGSI ADMIN -->
                 <div id="panelAdminTools" class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
                     <h3 class="text-xs font-bold text-amber-800 uppercase border-b border-amber-200 pb-2"><i class="fa-solid fa-key mr-1"></i> Buka Fungsi Admin</h3>
                     <p class="text-xs text-amber-700">Masukkan kode admin rahasia untuk membuka hak akses admin penuh.</p>
@@ -589,22 +589,56 @@
             });
         }
 
+        // FUNGSI SINKRONISASI & AGREGASI DATA REAL-TIME
         function syncDataFromDB() {
-            let dataPath = appState.isAdmin ? `data/${targetAdminCode}` : `data/${targetAdminCode}/outlets/${currentUser.uid}`;
-            
-            db.ref(dataPath).on('value', snapshot => {
-                const val = snapshot.val();
-                if (val) {
+            if (appState.isAdmin) {
+                // Admin mendengarkan data utama dan otomatis menggabungkan data dari seluruh outlet terhubung
+                db.ref(`data/${targetAdminCode}`).on('value', snapshot => {
+                    const val = snapshot.val() || {};
                     if (val.config) appState.config = val.config;
-                    appState.dataPenjualan = val.penjualan || [];
-                    appState.dataAktivitas = val.aktivitas || [];
-                    appState.dataTutupBuku = val.tutupBuku || [];
-                }
-                renderTabelPenjualan();
-                renderAktivitas();
-                renderArsipTutupBuku();
-                refreshDashboard();
-            });
+                    
+                    let combinedPenjualan = val.penjualan || [];
+                    let combinedAktivitas = val.aktivitas || [];
+                    let combinedTutupBuku = val.tutupBuku || [];
+
+                    if (val.outlets) {
+                        Object.values(val.outlets).forEach(outletData => {
+                            if (outletData.penjualan) combinedPenjualan = combinedPenjualan.concat(outletData.penjualan);
+                            if (outletData.aktivitas) combinedAktivitas = combinedAktivitas.concat(outletData.aktivitas);
+                            if (outletData.tutupBuku) combinedTutupBuku = combinedTutupBuku.concat(outletData.tutupBuku);
+                        });
+                    }
+
+                    appState.dataPenjualan = combinedPenjualan;
+                    appState.dataAktivitas = combinedAktivitas;
+                    appState.dataTutupBuku = combinedTutupBuku;
+
+                    renderTabelPenjualan();
+                    renderAktivitas();
+                    renderArsipTutupBuku();
+                    refreshDashboard();
+                });
+            } else {
+                // Outlet menyinkronkan data secara mandiri ke jalur admin yang di-follow
+                let dataPath = `data/${targetAdminCode}/outlets/${currentUser.uid}`;
+                db.ref(dataPath).on('value', snapshot => {
+                    const val = snapshot.val();
+                    if (val) {
+                        if (val.config) appState.config = val.config;
+                        appState.dataPenjualan = val.penjualan || [];
+                        appState.dataAktivitas = val.aktivitas || [];
+                        appState.dataTutupBuku = val.tutupBuku || [];
+                    } else {
+                        appState.dataPenjualan = [];
+                        appState.dataAktivitas = [];
+                        appState.dataTutupBuku = [];
+                    }
+                    renderTabelPenjualan();
+                    renderAktivitas();
+                    renderArsipTutupBuku();
+                    refreshDashboard();
+                });
+            }
         }
 
         function saveDataToDB() {
@@ -617,7 +651,6 @@
             });
         }
 
-        // SIMPAN FOLLOW ADMIN (FUNGSI KHUSUS OUTLET)
         function simpanFollowAdmin() {
             const kode = document.getElementById('inputFollowAdminCode').value;
             if (!kode) {
@@ -725,7 +758,7 @@
                 cardLaba.style.display = 'none'; 
                 hamburgerBtn.style.display = 'none'; 
                 outletStockPanel.classList.remove('hidden');
-                outletFollowAdminPanel.classList.remove('hidden'); // DITAMPILKAN KHUSUS MODE OUTLET
+                outletFollowAdminPanel.classList.remove('hidden');
                 adminConversionPanel.classList.add('hidden');
             }
             refreshDashboard();
