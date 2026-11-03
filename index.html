@@ -589,10 +589,8 @@
             });
         }
 
-        // FUNGSI SINKRONISASI & AGREGASI DATA REAL-TIME
         function syncDataFromDB() {
             if (appState.isAdmin) {
-                // Admin mendengarkan data utama dan otomatis menggabungkan data dari seluruh outlet terhubung
                 db.ref(`data/${targetAdminCode}`).on('value', snapshot => {
                     const val = snapshot.val() || {};
                     if (val.config) appState.config = val.config;
@@ -619,7 +617,6 @@
                     refreshDashboard();
                 });
             } else {
-                // Outlet menyinkronkan data secara mandiri ke jalur admin yang di-follow
                 let dataPath = `data/${targetAdminCode}/outlets/${currentUser.uid}`;
                 db.ref(dataPath).on('value', snapshot => {
                     const val = snapshot.val();
@@ -709,26 +706,33 @@
             }
         }
 
+        // FUNGSI LOAD OUTLETS YANG SUDAH DIPERBAIKI (MENAMPILKAN NAMA ASLI OUTLET)
         function loadOutletsList() {
+            const listEl = document.getElementById('drawerOutletList');
+            listEl.innerHTML = `<p class="text-xs text-gray-500">Memuat outlet terhubung...</p>`;
+
             db.ref(`data/${targetAdminCode}/outlets`).once('value', snapshot => {
-                const listEl = document.getElementById('drawerOutletList');
-                listEl.innerHTML = `<p class="text-xs font-bold text-gray-700 mb-2">Outlet Terhubung (Real-Time):</p>`;
-                
                 let val = snapshot.val();
                 if (!val) {
-                    listEl.innerHTML += `<p class="text-xs text-gray-400 italic">Belum ada outlet yang mengikuti kode admin ini.</p>`;
+                    listEl.innerHTML = `<p class="text-xs text-gray-400 italic">Belum ada outlet yang mengikuti kode admin ini.</p>`;
                     return;
                 }
                 
+                listEl.innerHTML = `<p class="text-xs font-bold text-gray-700 mb-2">Outlet Terhubung (Real-Time):</p>`;
+                
                 Object.keys(val).forEach(outletId => {
-                    listEl.innerHTML += `
-                        <div class="p-2.5 border rounded-xl bg-gray-50 flex justify-between items-center">
-                            <div>
-                                <h4 class="font-bold text-xs text-gray-800">Outlet ID: ${outletId.substring(0,6)}...</h4>
-                                <span class="text-[10px] text-emerald-600 font-semibold">Aktif Terhubung</span>
+                    db.ref(`users/${outletId}/outletName`).once('value', nameSnap => {
+                        let namaOutletAsli = nameSnap.val() || `Outlet (${outletId.substring(0,6)}...)`;
+                        
+                        listEl.innerHTML += `
+                            <div class="p-2.5 border rounded-xl bg-gray-50 flex justify-between items-center mb-2">
+                                <div>
+                                    <h4 class="font-bold text-xs text-gray-800">${namaOutletAsli}</h4>
+                                    <span class="text-[10px] text-emerald-600 font-semibold">Aktif Terhubung</span>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    });
                 });
             });
         }
