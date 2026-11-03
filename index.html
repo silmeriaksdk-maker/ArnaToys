@@ -9,30 +9,28 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Firebase App (Compat) & Realtime Database / Auth -->
+    <!-- Firebase JS SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800 antialiased">
 
-    <!-- AUTHENTICATION SCREEN (LOGIN / REGISTER) -->
+    <!-- AUTHENTICATION SCREEN -->
     <div id="authScreen" class="max-w-md mx-auto bg-white min-h-screen shadow-lg flex flex-col justify-center p-6">
         <div class="text-center mb-6">
             <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg mb-3">
                 CRS
             </div>
             <h1 class="text-xl font-bold text-gray-900">Community Retail Solidarity</h1>
-            <p class="text-xs text-gray-500 mt-1">Silakan masuk atau daftar untuk mulai menyinkronkan data secara real-time.</p>
+            <p class="text-xs text-gray-500 mt-1">Masuk atau daftar untuk menyinkronkan data secara real-time.</p>
         </div>
 
-        <!-- Auth Tabs -->
         <div class="flex border-b mb-4 text-xs font-semibold">
             <button onclick="switchAuthTab('login')" id="tabLoginBtn" class="flex-1 py-2.5 text-blue-600 border-b-2 border-blue-600">Masuk (Login)</button>
             <button onclick="switchAuthTab('register')" id="tabRegisterBtn" class="flex-1 py-2.5 text-gray-400">Daftar Akun Baru</button>
         </div>
 
-        <!-- Form Login -->
         <form id="formLogin" onsubmit="handleLogin(event)" class="space-y-3">
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Email</label>
@@ -47,7 +45,6 @@
             </button>
         </form>
 
-        <!-- Form Register -->
         <form id="formRegister" onsubmit="handleRegister(event)" class="space-y-3 hidden">
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Email</label>
@@ -67,7 +64,7 @@
         </form>
     </div>
 
-    <!-- MAIN APP WRAPPER (HIDDEN UNTIL AUTHENTICATED) -->
+    <!-- MAIN APP SCREEN -->
     <div id="appScreen" class="max-w-md mx-auto bg-white min-h-screen shadow-lg relative flex flex-col hidden">
 
         <!-- HEADER -->
@@ -81,13 +78,12 @@
                     <span id="headerRoleBadge" class="text-xs bg-blue-700 px-2 py-0.5 rounded-full font-medium">Mode Admin</span>
                 </div>
             </div>
-            <!-- Hamburger Menu for Slide Drawer -->
             <button id="btnHamburger" onclick="toggleDrawer(true)" class="p-2 text-white focus:outline-none hover:bg-blue-700 rounded-lg transition">
                 <i class="fa-solid fa-bars text-xl"></i>
             </button>
         </header>
 
-        <!-- MAIN CONTENT CONTAINER -->
+        <!-- MAIN CONTENT -->
         <main class="flex-1 pb-20 overflow-y-auto">
 
             <!-- TAB 1: DASHBOARD -->
@@ -97,7 +93,6 @@
                     <span class="text-xs text-gray-500 bg-gray-200 px-2.5 py-1 rounded-full font-medium" id="currentDateDisplay">-</span>
                 </div>
 
-                <!-- Metrics Grid -->
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 p-3.5 rounded-xl shadow-sm">
                         <span class="text-xs font-semibold text-blue-600 uppercase tracking-wide">Omset</span>
@@ -115,7 +110,6 @@
                         <span class="text-xs font-semibold text-purple-600 uppercase tracking-wide">Stok Barang</span>
                         <h3 id="dashStok" class="text-lg font-bold text-purple-900 mt-1">0 Pcs</h3>
                     </div>
-                    <!-- CARD BARANG HILANG (wr×) -->
                     <div class="bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 p-3.5 rounded-xl shadow-sm">
                         <span class="text-xs font-semibold text-rose-600 uppercase tracking-wide">Barang Hilang (wr×)</span>
                         <h3 id="dashBarangHilang" class="text-base font-bold text-rose-900 mt-1">0 Pcs</h3>
@@ -127,7 +121,6 @@
                     </div>
                 </div>
 
-                <!-- Quick Action Admin Notice / Logout -->
                 <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mt-4 space-y-3">
                     <h3 class="text-sm font-bold text-gray-700"><i class="fa-solid fa-shield-halved text-blue-600 mr-1.5"></i> Status Sesi & Akun</h3>
                     <div class="flex items-center justify-between">
@@ -168,7 +161,6 @@
                     </button>
                 </form>
 
-                <!-- Tabel Data Penjualan -->
                 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mt-4">
                     <div class="p-3 bg-gray-50 border-b border-gray-200">
                         <h3 class="text-xs font-bold text-gray-700 uppercase">Riwayat Tabel Penjualan</h3>
@@ -200,7 +192,6 @@
             <section id="tabAktivitas" class="p-4 space-y-4 hidden">
                 <h2 class="text-lg font-bold text-gray-800">Aktivitas (Pengeluaran & Stok Keluar)</h2>
 
-                <!-- Form Pengeluaran -->
                 <form id="formPengeluaran" onsubmit="handlePengeluaranSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
                     <h3 class="text-xs font-bold text-blue-600 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Input Pengeluaran Operasional</h3>
                     <div>
@@ -229,7 +220,6 @@
                     </button>
                 </form>
 
-                <!-- Form Stok Keluar -->
                 <form id="formStokKeluar" onsubmit="handleStokKeluarSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
                     <h3 class="text-xs font-bold text-purple-600 uppercase"><i class="fa-solid fa-boxes-stacked mr-1"></i> Input Stok Keluar (wr+, wr×, wr-)</h3>
                     <div>
@@ -259,7 +249,6 @@
                     </button>
                 </form>
 
-                <!-- Riwayat Aktivitas -->
                 <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-2">
                     <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2">Riwayat Pengeluaran & Stok Keluar</h3>
                     <div id="listAktivitasContainer" class="space-y-2 max-h-60 overflow-y-auto">
@@ -273,7 +262,6 @@
                 <h2 class="text-lg font-bold text-gray-800">Tutup Buku Periode</h2>
                 <p class="text-xs text-gray-500">Lakukan tutup buku untuk merangkum seluruh transaksi aktif dan memulai periode baru yang bersih.</p>
 
-                <!-- Form Eksekusi Tutup Buku -->
                 <form id="formTutupBuku" onsubmit="handleTutupBukuSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
                     <h3 class="text-xs font-bold text-blue-600 uppercase"><i class="fa-solid fa-lock mr-1"></i> Proses Penutupan Buku</h3>
                     <div class="grid grid-cols-2 gap-3">
@@ -291,7 +279,6 @@
                     </button>
                 </form>
 
-                <!-- Daftar Riwayat Kartu Tutup Buku -->
                 <div class="space-y-3 mt-4">
                     <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2">Arsip Riwayat Tutup Buku (Per Periode)</h3>
                     <div id="listTutupBukuContainer" class="space-y-2.5">
@@ -304,7 +291,23 @@
             <section id="tabPengaturan" class="p-4 space-y-4 hidden">
                 <h2 class="text-lg font-bold text-gray-800">Pengaturan & Konversi Sistem</h2>
 
-                <!-- PANEL KHUSUS OUTLET -->
+                <!-- FORM FOLLOW ADMIN (KHUSUS MODE OUTLET) -->
+                <div id="outletFollowAdminPanel" class="bg-white border border-blue-200 rounded-xl p-4 shadow-sm space-y-3 hidden">
+                    <h3 class="text-xs font-bold text-blue-700 uppercase border-b pb-2"><i class="fa-solid fa-link mr-1"></i> Terhubung ke Admin (Follow Admin)</h3>
+                    <p class="text-xs text-gray-600">Masukkan kode admin utama agar data transaksi outlet Anda terhubung dan dapat dipantau oleh admin.</p>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Kode Follow Admin</label>
+                        <div class="flex space-x-2">
+                            <input type="password" id="inputFollowAdminCode" placeholder="Masukkan Kode Admin (misal: 12345)" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button onclick="simpanFollowAdmin()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium shadow transition whitespace-nowrap">
+                                Hubungkan
+                            </button>
+                        </div>
+                    </div>
+                    <span id="statusFollowText" class="text-[11px] font-semibold text-emerald-600 block">Status: Terhubung ke Kode Admin (12345)</span>
+                </div>
+
+                <!-- PANEL STOK OUTLET (KHUSUS MODE OUTLET) -->
                 <div id="outletStockPanel" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3 hidden">
                     <h3 class="text-xs font-bold text-emerald-700 uppercase border-b pb-2"><i class="fa-solid fa-boxes-stacked mr-1"></i> Manajemen Stok Gudang Outlet</h3>
                     <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex justify-between items-center">
@@ -319,7 +322,7 @@
                     <p class="text-[11px] text-gray-500 italic">*Mode Outlet hanya dapat melakukan penambahan stok gudang.</p>
                 </div>
 
-                <!-- PANEL ADMIN -->
+                <!-- PANEL KONVERSI ADMIN (KHUSUS ADMIN) -->
                 <div id="adminConversionPanel" class="space-y-3">
                     <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
                         <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2"><i class="fa-solid fa-sliders text-blue-600 mr-1"></i> Parameter Konversi & Nilai Dasar (Admin)</h3>
@@ -365,7 +368,6 @@
                         </button>
                     </div>
 
-                    <!-- Admin Stok Controller -->
                     <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm space-y-2">
                         <h3 class="text-xs font-bold text-blue-800 uppercase border-b border-blue-200 pb-2"><i class="fa-solid fa-warehouse mr-1"></i> Kontrol Stok Gudang (Admin)</h3>
                         <div class="grid grid-cols-2 gap-2 pt-1">
@@ -379,7 +381,7 @@
                     </div>
                 </div>
 
-                <!-- Kustomisasi Outlet & Logo -->
+                <!-- KUSTOMISASI OUTLET & LOGO -->
                 <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
                     <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2"><i class="fa-solid fa-store text-blue-600 mr-1"></i> Identitas Outlet</h3>
                     <div>
@@ -395,10 +397,10 @@
                     </button>
                 </div>
 
-                <!-- Fitur Khusus Admin -->
+                <!-- BUKA FUNGSI ADMIN (UNTUK SWITCH KE ADMIN) -->
                 <div id="panelAdminTools" class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-                    <h3 class="text-xs font-bold text-amber-800 uppercase border-b border-amber-200 pb-2"><i class="fa-solid fa-key mr-1"></i> Panel Eksklusif Admin</h3>
-                    <p class="text-xs text-amber-700">Masukkan kode akses rahasia untuk membuka fungsi manajemen lanjutan.</p>
+                    <h3 class="text-xs font-bold text-amber-800 uppercase border-b border-amber-200 pb-2"><i class="fa-solid fa-key mr-1"></i> Buka Fungsi Admin</h3>
+                    <p class="text-xs text-amber-700">Masukkan kode admin rahasia untuk membuka hak akses admin penuh.</p>
                     <div class="flex space-x-2">
                         <input type="password" id="inputAdminCode" placeholder="Masukkan kode rahasia" class="w-full text-sm border border-amber-300 rounded-lg p-2 bg-white focus:outline-none">
                         <button onclick="verifikasiKodeAdmin()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg font-medium shadow transition whitespace-nowrap">
@@ -448,7 +450,7 @@
             </div>
         </div>
 
-        <!-- SLIDE DRAWER (OUTLET REAL-TIME SWITCHER) -->
+        <!-- SLIDE DRAWER -->
         <div id="drawerOverlay" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity" onclick="toggleDrawer(false)"></div>
         <div id="slideDrawer" class="fixed top-0 right-0 w-72 h-full bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
             <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
@@ -467,9 +469,8 @@
 
     </div>
 
-    <!-- FIREBASE INITIALIZATION & LOGIC SCRIPT -->
+    <!-- FIREBASE INITIALIZATION & SCRIPT -->
     <script>
-        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyD7YYO9OMRQ9aKBWDvfhsuOPkGg5WL2C8c",
             authDomain: "boltv2.firebaseapp.com",
@@ -481,13 +482,12 @@
             measurementId: "G-LNVE8TQV7L"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
 
         let currentUser = null;
-        let currentAdminCode = "12345"; // Default admin root
+        let targetAdminCode = "12345"; 
         let appState = {
             isAdmin: true,
             currentOutlet: 'Pusat / Admin Utama',
@@ -506,7 +506,6 @@
             dataTutupBuku: []
         };
 
-        // --- AUTH TABS ---
         function switchAuthTab(tab) {
             if (tab === 'login') {
                 document.getElementById('formLogin').classList.remove('hidden');
@@ -521,13 +520,12 @@
             }
         }
 
-        // --- AUTH ACTIONS ---
         function handleLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const pass = document.getElementById('loginPassword').value;
-            auth.signInWithEmailAndPassword(email, pass)
-                .catch(err => alert("Gagal Masuk: " + err.message));
+            auth.signInWithEmailAndPassword(
+                document.getElementById('loginEmail').value,
+                document.getElementById('loginPassword').value
+            ).catch(err => alert("Gagal Masuk: " + err.message));
         }
 
         function handleRegister(e) {
@@ -538,12 +536,11 @@
 
             auth.createUserWithEmailAndPassword(email, pass)
                 .then(cred => {
-                    // Simpan profil awal ke database
                     db.ref('users/' + cred.user.uid).set({
                         email: email,
                         outletName: outletName,
                         isAdmin: false,
-                        adminCode: "12345"
+                        followAdminCode: "12345"
                     });
                 })
                 .catch(err => alert("Gagal Daftar: " + err.message));
@@ -553,7 +550,6 @@
             auth.signOut();
         }
 
-        // Firebase Auth State Listener
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
@@ -567,32 +563,34 @@
             }
         });
 
-        // --- REALTIME DATABASE SYNC ---
         function initRealtimeSync(uid) {
             db.ref('users/' + uid).on('value', snapshot => {
                 const profile = snapshot.val();
                 if (profile) {
                     appState.isAdmin = profile.isAdmin;
                     appState.currentOutlet = profile.outletName;
-                    currentAdminCode = profile.adminCode || "12345";
+                    targetAdminCode = profile.followAdminCode || "12345";
                     
                     document.getElementById('headerOutletName').innerText = profile.outletName;
+                    document.getElementById('cfgNamaOutlet').value = profile.outletName;
+                    document.getElementById('inputFollowAdminCode').value = targetAdminCode;
+                    document.getElementById('statusFollowText').innerText = `Status: Terhubung ke Kode Admin (${targetAdminCode})`;
+                    
                     applyRoleUI();
                     syncDataFromDB();
                 } else {
-                    // Jika data user belum ada di RTDB, buat default sebagai admin
                     db.ref('users/' + uid).set({
                         email: currentUser.email,
-                        outletName: "Pusat / Admin Utama",
-                        isAdmin: true,
-                        adminCode: "12345"
+                        outletName: "Outlet Baru",
+                        isAdmin: false,
+                        followAdminCode: "12345"
                     });
                 }
             });
         }
 
         function syncDataFromDB() {
-            let dataPath = appState.isAdmin ? `data/${currentAdminCode}` : `data/${currentAdminCode}/outlets/${currentUser.uid}`;
+            let dataPath = appState.isAdmin ? `data/${targetAdminCode}` : `data/${targetAdminCode}/outlets/${currentUser.uid}`;
             
             db.ref(dataPath).on('value', snapshot => {
                 const val = snapshot.val();
@@ -610,7 +608,7 @@
         }
 
         function saveDataToDB() {
-            let dataPath = appState.isAdmin ? `data/${currentAdminCode}` : `data/${currentAdminCode}/outlets/${currentUser.uid}`;
+            let dataPath = appState.isAdmin ? `data/${targetAdminCode}` : `data/${targetAdminCode}/outlets/${currentUser.uid}`;
             db.ref(dataPath).set({
                 config: appState.config,
                 penjualan: appState.dataPenjualan,
@@ -619,7 +617,19 @@
             });
         }
 
-        // --- UI & APP LOGIC ---
+        // SIMPAN FOLLOW ADMIN (FUNGSI KHUSUS OUTLET)
+        function simpanFollowAdmin() {
+            const kode = document.getElementById('inputFollowAdminCode').value;
+            if (!kode) {
+                alert("Masukkan Kode Admin yang ingin diikuti!");
+                return;
+            }
+            targetAdminCode = kode;
+            db.ref('users/' + currentUser.uid).update({ followAdminCode: kode });
+            alert(`Berhasil terhubung dengan Kode Admin: ${kode}`);
+            syncDataFromDB();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('pTgl').value = today;
@@ -667,7 +677,7 @@
         }
 
         function loadOutletsList() {
-            db.ref(`data/${currentAdminCode}/outlets`).once('value', snapshot => {
+            db.ref(`data/${targetAdminCode}/outlets`).once('value', snapshot => {
                 const listEl = document.getElementById('drawerOutletList');
                 listEl.innerHTML = `<p class="text-xs font-bold text-gray-700 mb-2">Outlet Terhubung (Real-Time):</p>`;
                 
@@ -690,18 +700,13 @@
             });
         }
 
-        function toggleAdminMode() {
-            appState.isAdmin = !appState.isAdmin;
-            db.ref('users/' + currentUser.uid).update({ isAdmin: appState.isAdmin });
-            applyRoleUI();
-        }
-
         function applyRoleUI() {
             const badge = document.getElementById('headerRoleBadge');
             const roleStatus = document.getElementById('roleStatusText');
             const cardLaba = document.getElementById('cardLabaBersih');
             const hamburgerBtn = document.getElementById('btnHamburger');
             const outletStockPanel = document.getElementById('outletStockPanel');
+            const outletFollowAdminPanel = document.getElementById('outletFollowAdminPanel');
             const adminConversionPanel = document.getElementById('adminConversionPanel');
             
             if (appState.isAdmin) {
@@ -711,14 +716,16 @@
                 cardLaba.style.display = 'block';
                 hamburgerBtn.style.display = 'block';
                 outletStockPanel.classList.add('hidden');
+                outletFollowAdminPanel.classList.add('hidden');
                 adminConversionPanel.classList.remove('hidden');
             } else {
                 badge.innerText = 'Mode Outlet';
                 badge.className = 'text-xs bg-emerald-700 px-2 py-0.5 rounded-full font-medium';
                 roleStatus.innerText = 'Status: Akses Terbatas (Outlet)';
-                cardLaba.style.display = 'none'; // Sesuai aturan: Laba bersih dihide untuk outlet
-                hamburgerBtn.style.display = 'none'; // Drawer dihide
+                cardLaba.style.display = 'none'; 
+                hamburgerBtn.style.display = 'none'; 
                 outletStockPanel.classList.remove('hidden');
+                outletFollowAdminPanel.classList.remove('hidden'); // DITAMPILKAN KHUSUS MODE OUTLET
                 adminConversionPanel.classList.add('hidden');
             }
             refreshDashboard();
@@ -917,7 +924,6 @@
                 snapshotAktivitas: [...appState.dataAktivitas]
             });
 
-            // Reset data aktif
             appState.dataPenjualan = [];
             appState.dataAktivitas = [];
             saveDataToDB();
