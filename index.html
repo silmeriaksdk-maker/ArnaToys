@@ -367,9 +367,9 @@
                     <!-- TOMBOL BERSIHKAN SAMPAH DATA FIREBASE (KHUSUS ADMIN) -->
                     <div class="bg-rose-50 border border-rose-200 rounded-xl p-4 shadow-sm space-y-2 mt-3">
                         <h3 class="text-xs font-bold text-rose-800 uppercase border-b border-rose-200 pb-2"><i class="fa-solid fa-trash-can mr-1"></i> Pemeliharaan Database (Hapus Sampah Data)</h3>
-                        <p class="text-[11px] text-rose-700">Membersihkan direktori outlet di Firebase dari akun atau sampah data yang sudah tidak terdaftar aktif.</p>
+                        <p class="text-[11px] text-rose-700">Menghapus data/transaksi sisa dari akun email yang sudah tidak terdaftar di sistem.</p>
                         <button onclick="bersihkanSampahDatabase()" class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs py-2.5 rounded-lg font-medium shadow transition">
-                            <i class="fa-solid fa-broom mr-1"></i> Bersihkan Sampah Data Tidak Aktif
+                            <i class="fa-solid fa-broom mr-1"></i> Bersihkan Sampah Data Akun Tidak Terdaftar
                         </button>
                     </div>
                 </div>
@@ -453,7 +453,7 @@
                 </button>
             </div>
             <div class="p-4 flex-1 overflow-y-auto space-y-2.5" id="drawerOutletList">
-                <p class="text-xs text-gray-500">Memuat outlet terdaftar...</p>
+                <p class="text-xs text-gray-500">Memuat daftar outlet...</p>
             </div>
             <div class="p-3 border-t bg-gray-50 text-center">
                 <span class="text-[10px] text-gray-400">CRS Real-Time v1.0</span>
@@ -577,13 +577,25 @@
         }
 
         function syncDataFromDB() {
-            // Sinkronisasi data terpusat secara otomatis
-            db.ref(' pusat_data').on('value', () => {}); // placeholder koneksi
+            // Sinkronisasi konfigurasi admin ke semua (admin & outlet)
+            db.ref('admin_config').on('value', snap => {
+                if (snap.exists()) {
+                    let cfg = snap.val();
+                    appState.config.hargaPcs = cfg.hargaPcs ?? appState.config.hargaPcs;
+                    appState.config.satuanKemasan = cfg.satuanKemasan ?? appState.config.satuanKemasan;
+                    appState.config.isiPerSatuan = cfg.isiPerSatuan ?? appState.config.isiPerSatuan;
+                    appState.config.stokAwal = cfg.stokAwal ?? appState.config.stokAwal;
+                    appState.config.manualLabaBarang = cfg.manualLabaBarang ?? appState.config.manualLabaBarang;
+                    appState.config.manualLabaBersih = cfg.manualLabaBersih ?? appState.config.manualLabaBersih;
+                    if (appState.isAdmin) {
+                        appState.config.stokDelta = cfg.stokDelta ?? appState.config.stokDelta;
+                    }
+                    updateUIConfigFields();
+                    refreshDashboard();
+                }
+            });
 
             if (appState.isAdmin) {
-                // Admin memantau pusat utama dan mengagregasi seluruh outlet terdaftar di database 'outlets/'
-                db.ref(' pusat_data').on('value', () => {}); // dummy listener
-                
                 db.ref('outlets').on('value', outletSnap => {
                     let outletsVal = outletSnap.val() || {};
                     let combinedPenjualan = [];
@@ -614,30 +626,16 @@
                     renderArsipTutupBuku();
                     refreshDashboard();
                 });
-
-                db.ref('admin_config').on('value', snap => {
-                    if (snap.exists()) {
-                        appState.config = snap.val();
-                        updateUIConfigFields();
-                        refreshDashboard();
-                    }
-                });
             } else {
-                // Mode Outlet membaca konfigurasi pusat dan datanya sendiri secara otomatis
-                db.ref('admin_config').on('value', snap => {
-                    if (snap.exists()) {
-                        appState.config = snap.val();
-                        updateUIConfigFields();
-                        refreshDashboard();
-                    }
-                });
-
                 db.ref(`outlets/${currentUser.uid}`).on('value', outletSnap => {
                     const outVal = outletSnap.val();
                     if (outVal) {
                         appState.dataPenjualan = outVal.penjualan || [];
                         appState.dataAktivitas = outVal.aktivitas || [];
                         appState.dataTutupBuku = outVal.tutupBuku || [];
+                        if (outVal.stokDelta !== undefined) {
+                            appState.config.stokDelta = outVal.stokDelta;
+                        }
                     } else {
                         appState.dataPenjualan = [];
                         appState.dataAktivitas = [];
@@ -672,35 +670,34 @@
                 db.ref(dataPath).set({
                     penjualan: appState.dataPenjualan || [],
                     aktivitas: appState.dataAktivitas || [],
-                    tutupBuku: appState.dataTutupBuku || []
+                    tutupBuku: appState.dataTutupBuku || [],
+                    stokDelta: appState.config.stokDelta || 0
                 });
             }
         }
 
-        // FUNGSI BARU: MEMBERSIHKAN SAMPAH DATA AKUN YANG SUDAH TIDAK TERDAFTAR DI FIREBASE
+        // FUNGSI PEMELIHARAAN: MENGHAPUS DATA DARI AKUN/GMAIL YANG SUDAH TIDAK TERDAFTAR DI FIREBASE
         function bersihkanSampahDatabase() {
             if (!appState.isAdmin) return;
-            if (!confirm("Apakah Anda yakin ingin membersihkan data sampah dari akun/outlet yang sudah tidak aktif?")) return;
+            if (!confirm("Apakah Anda yakin ingin membersihkan data transaksi dari akun/email yang sudah tidak terdaftar?")) return;
 
-            // Ambil daftar user yang valid dari node users/
             db.ref('users').once('value', userSnap => {
                 let activeUsers = userSnap.val() || {};
                 let validIds = Object.keys(activeUsers);
 
-                // Periksa data di outlets/
                 db.ref('outlets').once('value', outletSnap => {
                     let outletsData = outletSnap.val() || {};
                     let countRemoved = 0;
 
                     Object.keys(outletsData).forEach(outletId => {
-                        // Jika ID outlet tidak ada di daftar user valid, hapus sebagai sampah data
+                        // Jika UID outlet tidak ada di daftar user valid, hapus sebagai sampah data
                         if (!validIds.includes(outletId)) {
                             db.ref(`outlets/${outletId}`).remove();
                             countRemoved++;
                         }
                     });
 
-                    alert(`Pembersihan selesai! Berhasil menghapus ${countRemoved} data outlet/sampah yang sudah tidak aktif.`);
+                    alert(`Pembersihan selesai! Berhasil menghapus ${countRemoved} data transaksi dari akun yang sudah tidak terdaftar.`);
                 });
             });
         }
@@ -1040,18 +1037,17 @@
             appState.dataPenjualan = [];
             appState.dataAktivitas = [];
 
-            // Simpan konfigurasi dan arsip ke pusat admin
             db.ref('admin_config').set(appState.config);
             db.ref('tutupBuku').set(appState.dataTutupBuku);
 
-            // Kosongkan transaksi seluruh outlet secara otomatis
             db.ref('outlets').once('value', snapshot => {
                 let outletsVal = snapshot.val();
                 if (outletsVal) {
                     Object.keys(outletsVal).forEach(outletId => {
                         db.ref(`outlets/${outletId}`).update({
                             penjualan: [],
-                            aktivitas: []
+                            aktivitas: [],
+                            stokDelta: 0
                         });
                     });
                 }
