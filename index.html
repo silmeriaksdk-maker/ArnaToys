@@ -259,7 +259,12 @@
 
             <!-- TAB 4: TUTUP BUKU -->
             <section id="tabTutupBuku" class="p-4 space-y-4 hidden">
-                <h2 class="text-lg font-bold text-gray-800">Tutup Buku Periode</h2>
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-800">Tutup Buku Periode</h2>
+                    <button id="btnDownloadTxt" onclick="downloadLaporanTxt()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow transition flex items-center hidden">
+                        <i class="fa-solid fa-file-arrow-down mr-1.5"></i> Download Txt
+                    </button>
+                </div>
                 <p class="text-xs text-gray-500" id="tutupBukuDesc">Lakukan tutup buku untuk merangkum seluruh transaksi aktif dan memulai periode baru yang bersih.</p>
 
                 <form id="formTutupBuku" onsubmit="handleTutupBukuSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
@@ -477,7 +482,7 @@
                     <h3 class="font-bold text-sm" id="modalPeriodeTitle">Detail Tutup Buku</h3>
                     <button onclick="tutupModalDetail()" class="text-white hover:bg-emerald-700 p-1.5 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
                 </div>
-                <div class="p-4 overflow-y-auto space-y-3 text-xs" id="modalDetailContent"></div>
+                <div class="p-4 overflow-y-auto space-y-2 text-xs" id="modalDetailContent"></div>
                 <div class="p-3 bg-gray-50 border-t text-center">
                     <button onclick="tutupModalDetail()" class="bg-gray-800 text-white text-xs px-4 py-2 rounded-lg font-medium w-full">Tutup</button>
                 </div>
@@ -641,12 +646,17 @@
             // Sinkronisasi Arsip Tutup Buku global / per outlet
             db.ref('tutupBuku').on('value', snap => {
                 let valTutupBuku = snap.val() || [];
-                appState.dataTutupBuku = Array.isArray(valTutupBuku) ? valTutupBuku : Object.values(valTutupBuku);
+                let parsedList = Array.isArray(valTutupBuku) ? valTutupBuku : Object.values(valTutupBuku);
+                if (appState.isAdmin) {
+                    appState.dataTutupBuku = parsedList;
+                } else {
+                    // Saring arsip tutup buku khusus milik outlet yang sedang login
+                    appState.dataTutupBuku = parsedList.filter(item => item.outlet === appState.currentOutlet);
+                }
                 renderArsipTutupBuku();
             });
 
             if (appState.isAdmin) {
-                // Admin membaca gabungan data penjualan & aktivitas dari seluruh outlet
                 db.ref('outlets').on('value', outletSnap => {
                     let outletsVal = outletSnap.val() || {};
                     let combinedPenjualan = [];
@@ -671,7 +681,6 @@
                     refreshDashboard();
                 });
             } else {
-                // Outlet hanya membaca data miliknya sendiri di bawah path 'outlets/uid'
                 db.ref(`outlets/${currentUser.uid}`).on('value', outletSnap => {
                     const outVal = outletSnap.val();
                     if (outVal) {
@@ -824,6 +833,91 @@
             reader.readAsText(file);
         }
 
+        // --- FITUR DOWNLOAD LAPORAN TXT (ADMIN) ---
+        function formatKonversiKemasan(pcs) {
+            const isi = appState.config.isiPerSatuan || 50;
+            const satuan = appState.config.satuanKemasan || 'Terpal';
+            const jumlahKemasan = (pcs / isi).toFixed(1);
+            return `${pcs}Pcs (${jumlahKemasan} ${satuan})`;
+        }
+
+        function downloadLaporanTxt() {
+            if (!appState.isAdmin) return;
+
+            db.ref('outlets').once('value', snapshot => {
+                let outletsVal = snapshot.val() || {};
+                let textReport = "=== LAPORAN REKAPITULASI OUTLET CRS ===\n";
+                textReport += `Tanggal Cetak: ${new Date().toLocaleString('id-ID')}\n\n`;
+
+                Object.keys(outletsVal).forEach(outletId => {
+                    let outData = outletsVal[outletId];
+                    let outletName = outData.outletName || `Outlet (${outletId.substring(0,6)})`;
+                    
+                    textReport += `----------------------------------------\n`;
+                    textReport += `Nama Outlet: ${outletName}\n`;
+                    textReport += `----------------------------------------\n\n`;
+
+                    // 1. Penjualan Sales
+                    textReport += `Penjualan sales\n`;
+                    let pList = Array.isArray(outData.penjualan) ? outData.penjualan : Object.values(outData.penjualan || {});
+                    if (pList.length === 0) {
+                        textReport += `- Belum ada data penjualan\n`;
+                    } else {
+                        // Kelompokkan per nama sales
+                        let salesMap = {};
+                        pList.forEach(p => {
+                            let sName = p.sales || 'Tanpa Nama';
+                            salesMap[sName] = (salesMap[sName] || 0) + (p.terjual || 0);
+                        });
+                        Object.keys(salesMap).forEach(sName => {
+                            textReport += `Nama : ${sName}\n`;
+                            textReport += `Terjual : ${salesMap[sName]} Pcs\n`;
+                        });
+                    }
+                    textReport += `\n`;
+
+                    // 2. Pengeluaran Outlet
+                    textReport += `Pengeluaran outlet\n`;
+                    let aList = Array.isArray(outData.aktivitas) ? outData.aktivitas : Object.values(outData.aktivitas || {});
+                    let totalPengeluaranLabaBersih = 0;
+                    let totalPengeluaranLabaBarang = 0;
+                    let countWrPlus = 0, pcsWrPlus = 0;
+                    let countWrX = 0, pcsWrX = 0;
+                    let countWrMin = 0;
+
+                    aList.forEach(a => {
+                        if (a.tipe === 'pengeluaran') {
+                            if (a.sumber === 'laba_bersih') totalPengeluaranLabaBersih += (a.nominal || 0);
+                            else totalPengeluaranLabaBarang += (a.nominal || 0);
+                        } else if (a.tipe === 'stok_keluar') {
+                            if (a.subTipe === 'wr+') { countWrPlus++; pcsWrPlus += (a.pcs || 0); }
+                            else if (a.subTipe === 'wr×') { countWrX++; pcsWrX += (a.pcs || 0); }
+                            else if (a.subTipe === 'wr-') { countWrMin++; }
+                        }
+                    });
+
+                    textReport += `Laba bersih: Rp ${totalPengeluaranLabaBersih.toLocaleString('id-ID')}\n`;
+                    textReport += `Laba barang : Rp ${totalPengeluaranLabaBarang.toLocaleString('id-ID')}\n\n`;
+
+                    // 3. Warung (wr+, wr×, wr-)
+                    textReport += `Warung\n`;
+                    textReport += `Wr+ : ${formatKonversiKemasan(pcsWrPlus)}\n`;
+                    textReport += `Wr× : ${formatKonversiKemasan(pcsWrX)}\n`;
+                    textReport += `Wr- : ${countWrMin} warung\n\n`;
+                });
+
+                // Buat file blob dan unduh
+                let blob = new Blob([textReport], { type: 'text/plain;charset=utf-8' });
+                let url = URL.createObjectURL(blob);
+                let anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.download = `Laporan_CRS_${new Date().toISOString().split('T')[0]}.txt`;
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('pTgl').value = today;
@@ -910,6 +1004,7 @@
             const adminMaintenanceSection = document.getElementById('adminMaintenanceSection');
             const formTutupBuku = document.getElementById('formTutupBuku');
             const tutupBukuDesc = document.getElementById('tutupBukuDesc');
+            const btnDownloadTxt = document.getElementById('btnDownloadTxt');
             
             if (appState.isAdmin) {
                 badge.innerText = 'Mode Admin';
@@ -920,6 +1015,7 @@
                 outletStockPanel.classList.add('hidden');
                 adminConversionPanel.classList.remove('hidden');
                 adminMaintenanceSection.classList.remove('hidden');
+                if (btnDownloadTxt) btnDownloadTxt.classList.remove('hidden');
                 if (formTutupBuku) formTutupBuku.style.display = 'block';
                 if (tutupBukuDesc) tutupBukuDesc.innerText = 'Lakukan tutup buku untuk merangkum seluruh transaksi aktif dan memulai periode baru yang bersih.';
             } else {
@@ -931,6 +1027,7 @@
                 outletStockPanel.classList.remove('hidden');
                 adminConversionPanel.classList.add('hidden');
                 adminMaintenanceSection.classList.add('hidden');
+                if (btnDownloadTxt) btnDownloadTxt.classList.add('hidden');
                 if (formTutupBuku) formTutupBuku.style.display = 'none';
                 if (tutupBukuDesc) tutupBukuDesc.innerText = 'Berikut adalah arsip riwayat tutup buku yang dilakukan oleh Admin pusat.';
             }
@@ -1167,7 +1264,6 @@
             db.ref('admin_config').set(appState.config);
             db.ref('tutupBuku').set(appState.dataTutupBuku);
 
-            // Kosongkan transaksi aktif seluruh outlet secara otomatis
             db.ref('outlets').once('value', snapshot => {
                 let outletsVal = snapshot.val();
                 if (outletsVal) {
@@ -1237,22 +1333,18 @@
             const container = document.getElementById('listTutupBukuContainer');
             let listTutupBuku = Array.isArray(appState.dataTutupBuku) ? appState.dataTutupBuku : Object.values(appState.dataTutupBuku || {});
 
-            // Jika outlet, saring riwayat tutup buku hanya yang terkait atau biarkan arsip global pusat
-            if (!appState.isAdmin) {
-                // Outlet melihat arsip riwayat tutup buku
-            }
-
             if (listTutupBuku.length === 0) {
                 container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Belum ada riwayat tutup buku tercatat.</p>`;
                 return;
             }
             container.innerHTML = '';
             listTutupBuku.slice().reverse().forEach(arsip => {
+                let labaBersihHTML = appState.isAdmin ? ` | Laba Bersih: <span class="font-bold text-emerald-600">Rp ${(arsip.labaBersih || 0).toLocaleString('id-ID')}</span>` : '';
                 container.innerHTML += `
                     <div onclick="bukaDetailTutupBuku(${arsip.id})" class="bg-white border border-emerald-200 rounded-xl p-3 shadow-sm hover:bg-emerald-50/50 cursor-pointer transition flex justify-between items-center">
                         <div>
-                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Periode: ${arsip.tglMulai} s.d ${arsip.tglAkhir}</span>
-                            <div class="text-[11px] text-gray-600 mt-1">Omset: <span class="font-bold text-blue-600">Rp ${(arsip.totalOmset || 0).toLocaleString('id-ID')}</span> | Sisa Stok: <span class="font-bold text-purple-600">${arsip.stokSisaAkhir || 0} Pcs</span></div>
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Periode: ${arsip.tglMulai} s.d ${arsip.tglAkhir} (${arsip.outlet || 'Pusat'})</span>
+                            <div class="text-[11px] text-gray-600 mt-1">Omset: <span class="font-bold text-blue-600">Rp ${(arsip.totalOmset || 0).toLocaleString('id-ID')}</span>${labaBersihHTML}</div>
                         </div>
                         <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
                     </div>
@@ -1266,12 +1358,15 @@
             if (!arsip) return;
             document.getElementById('modalPeriodeTitle').innerText = `Periode: ${arsip.tglMulai} - ${arsip.tglAkhir}`;
             document.getElementById('modalDetailContent').innerHTML = `
-                <div class="bg-gray-50 p-3 rounded-xl border space-y-1">
-                    <div class="flex justify-between"><span>Total Omset:</span> <span class="font-bold text-blue-600">Rp ${(arsip.totalOmset || 0).toLocaleString('id-ID')}</span></div>
-                    <div class="flex justify-between"><span>Laba Bersih:</span> <span class="font-bold text-emerald-600">Rp ${(arsip.labaBersih || 0).toLocaleString('id-ID')}</span></div>
-                    <div class="flex justify-between"><span>Total Pengeluaran:</span> <span class="font-bold text-red-600">Rp ${(arsip.totalPengeluaran || 0).toLocaleString('id-ID')}</span></div>
-                    <div class="flex justify-between"><span>Kerugian Barang Hilang (wr×):</span> <span class="font-bold text-rose-600">Rp ${(arsip.kerugianHilang || 0).toLocaleString('id-ID')}</span></div>
-                    <div class="flex justify-between border-t pt-1 mt-1 font-semibold text-purple-700"><span>Stok Sisa Akhir (Dibawa ke Periode Baru):</span> <span>${arsip.stokSisaAkhir || 0} Pcs</span></div>
+                <div class="bg-gray-50 p-3 rounded-xl border space-y-1.5">
+                    <p class="text-[10px] text-gray-400 font-semibold uppercase mb-1">Rangkuman Transaksi Outlet (${arsip.outlet || 'Pusat'}):</p>
+                    <div class="flex justify-between"><span>- Total Omset:</span> <span class="font-bold text-blue-600">Rp ${(arsip.totalOmset || 0).toLocaleString('id-ID')}</span></div>
+                    <div class="flex justify-between"><span>- Laba barang:</span> <span class="font-bold text-amber-600">Rp ${(arsip.labaBarang || 0).toLocaleString('id-ID')}</span></div>
+                    <div class="flex justify-between"><span>- Laba Bersih:</span> <span class="font-bold text-emerald-600">Rp ${(arsip.labaBersih || 0).toLocaleString('id-ID')}</span></div>
+                    <div class="flex justify-between"><span>- Total Pengeluaran:</span> <span class="font-bold text-red-600">Rp ${(arsip.totalPengeluaran || 0).toLocaleString('id-ID')}</span></div>
+                    <div class="flex justify-between"><span>- Kerugian Barang Hilang (wr×):</span> <span class="font-bold text-rose-600">Rp ${(arsip.kerugianHilang || 0).toLocaleString('id-ID')}</span></div>
+                    <div class="flex justify-between"><span>- Terjual:</span> <span class="font-bold text-teal-600">${arsip.totalTerjual || 0} Pcs</span></div>
+                    <div class="flex justify-between border-t pt-1.5 mt-1.5 font-semibold text-purple-700"><span>- Stok Sisa Akhir:</span> <span>${arsip.stokSisaAkhir || 0} Pcs</span></div>
                 </div>
             `;
             document.getElementById('modalDetailTutupBuku').classList.remove('hidden');
