@@ -70,8 +70,9 @@
         <!-- HEADER -->
         <header class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow">
             <div class="flex items-center space-x-2">
-                <div id="outletLogoContainer" class="w-9 h-9 bg-white text-blue-600 rounded-full flex items-center justify-center font-bold text-sm shadow">
+                <div id="outletLogoContainer" class="w-9 h-9 bg-white text-blue-600 rounded-full flex items-center justify-center font-bold text-sm shadow overflow-hidden relative">
                     <span id="outletLogoText">CRS</span>
+                    <img id="outletLogoImg" class="w-full h-full object-cover hidden" alt="Logo">
                 </div>
                 <div>
                     <h1 id="headerOutletName" class="font-bold text-base leading-tight">Pusat / Admin Utama</h1>
@@ -259,12 +260,7 @@
 
             <!-- TAB 4: TUTUP BUKU -->
             <section id="tabTutupBuku" class="p-4 space-y-4 hidden">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-gray-800">Tutup Buku Periode</h2>
-                    <button id="btnDownloadTxt" onclick="downloadLaporanTxt()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow transition flex items-center hidden">
-                        <i class="fa-solid fa-file-arrow-down mr-1.5"></i> Download Txt
-                    </button>
-                </div>
+                <h2 class="text-lg font-bold text-gray-800">Tutup Buku Periode</h2>
                 <p class="text-xs text-gray-500" id="tutupBukuDesc">Lakukan tutup buku untuk merangkum seluruh transaksi aktif dan memulai periode baru yang bersih.</p>
 
                 <form id="formTutupBuku" onsubmit="handleTutupBukuSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
@@ -330,15 +326,9 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">1 Pcs = (Rp)</label>
-                                <input type="number" id="cfgHargaPcs" value="1200" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Stok Awal Gudang (Pcs)</label>
-                                <input type="number" id="cfgStokAwal" value="0" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">1 Pcs = (Rp)</label>
+                            <input type="number" id="cfgHargaPcs" value="1200" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
 
                         <div class="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
@@ -428,8 +418,8 @@
                         <input type="text" id="cfgNamaOutlet" value="Pusat / Admin Utama" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Inisial Logo (maks 3 huruf)</label>
-                        <input type="text" id="cfgLogoOutlet" value="CRS" maxlength="3" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 uppercase focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Logo Gambar Outlet (Pilih dari Penyimpanan)</label>
+                        <input type="file" id="cfgLogoFile" accept="image/*" onchange="previewAndSaveLogo(event)" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                     </div>
                     <button onclick="simpanIdentitasOutlet()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
                         Perbarui Identitas Outlet
@@ -483,8 +473,27 @@
                     <button onclick="tutupModalDetail()" class="text-white hover:bg-emerald-700 p-1.5 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
                 </div>
                 <div class="p-4 overflow-y-auto space-y-2 text-xs" id="modalDetailContent"></div>
+                <div class="p-3 bg-gray-50 border-t flex space-x-2">
+                    <button id="modalDownloadTxtBtn" onclick="" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center justify-center">
+                        <i class="fa-solid fa-file-arrow-down mr-1.5"></i> Download Txt Periode Ini
+                    </button>
+                    <button onclick="tutupModalDetail()" class="bg-gray-800 text-white text-xs px-4 py-2 rounded-lg font-medium">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL INTIP PROFIL OUTLET -->
+        <div id="modalInspectOutlet" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
+                    <h3 class="font-bold text-sm" id="inspectModalTitle">Profil Outlet</h3>
+                    <button onclick="tutupModalInspect()" class="text-white hover:bg-blue-700 p-1.5 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <div class="p-4 overflow-y-auto space-y-4 text-xs" id="inspectModalContent">
+                    <p class="text-gray-500 text-center py-4">Memuat data outlet...</p>
+                </div>
                 <div class="p-3 bg-gray-50 border-t text-center">
-                    <button onclick="tutupModalDetail()" class="bg-gray-800 text-white text-xs px-4 py-2 rounded-lg font-medium w-full">Tutup</button>
+                    <button onclick="tutupModalInspect()" class="bg-gray-800 text-white text-xs px-4 py-2 rounded-lg font-medium w-full">Tutup</button>
                 </div>
             </div>
         </div>
@@ -531,12 +540,11 @@
         let appState = {
             isAdmin: true,
             currentOutlet: 'Pusat / Admin Utama',
-            logoText: 'CRS',
+            logoUrl: '',
             config: {
                 hargaPcs: 1200,
                 satuanKemasan: 'Terpal',
                 isiPerSatuan: 50,
-                stokAwal: 0,
                 stokDelta: 0,
                 manualLabaBarang: 500,
                 manualLabaBersih: 400
@@ -608,6 +616,10 @@
                 if (profile) {
                     appState.isAdmin = profile.isAdmin;
                     appState.currentOutlet = profile.outletName;
+                    if (profile.logoUrl) {
+                        appState.logoUrl = profile.logoUrl;
+                        setLogoUI(profile.logoUrl);
+                    }
                     
                     document.getElementById('headerOutletName').innerText = profile.outletName;
                     document.getElementById('cfgNamaOutlet').value = profile.outletName;
@@ -625,7 +637,6 @@
         }
 
         function syncDataFromDB() {
-            // Sinkronisasi konfigurasi admin
             db.ref('admin_config').on('value', snap => {
                 if (snap.exists()) {
                     let cfg = snap.val();
@@ -634,8 +645,11 @@
                     appState.config.isiPerSatuan = cfg.isiPerSatuan ?? appState.config.isiPerSatuan;
                     appState.config.manualLabaBarang = cfg.manualLabaBarang ?? appState.config.manualLabaBarang;
                     appState.config.manualLabaBersih = cfg.manualLabaBersih ?? appState.config.manualLabaBersih;
+                    if (cfg.logoUrl) {
+                        appState.logoUrl = cfg.logoUrl;
+                        setLogoUI(cfg.logoUrl);
+                    }
                     if (appState.isAdmin) {
-                        appState.config.stokAwal = cfg.stokAwal ?? appState.config.stokAwal;
                         appState.config.stokDelta = cfg.stokDelta ?? appState.config.stokDelta;
                     }
                     updateUIConfigFields();
@@ -643,14 +657,12 @@
                 }
             });
 
-            // Sinkronisasi Arsip Tutup Buku global / per outlet
             db.ref('tutupBuku').on('value', snap => {
                 let valTutupBuku = snap.val() || [];
                 let parsedList = Array.isArray(valTutupBuku) ? valTutupBuku : Object.values(valTutupBuku);
                 if (appState.isAdmin) {
                     appState.dataTutupBuku = parsedList;
                 } else {
-                    // Saring arsip tutup buku khusus milik outlet yang sedang login
                     appState.dataTutupBuku = parsedList.filter(item => item.outlet === appState.currentOutlet);
                 }
                 renderArsipTutupBuku();
@@ -687,12 +699,10 @@
                         appState.dataPenjualan = outVal.penjualan || [];
                         appState.dataAktivitas = outVal.aktivitas || [];
                         if (outVal.stokDelta !== undefined) appState.config.stokDelta = outVal.stokDelta;
-                        if (outVal.stokAwal !== undefined) appState.config.stokAwal = outVal.stokAwal;
                     } else {
                         appState.dataPenjualan = [];
                         appState.dataAktivitas = [];
                         appState.config.stokDelta = 0;
-                        appState.config.stokAwal = 0;
                     }
                     renderTabelPenjualan();
                     renderAktivitas();
@@ -706,7 +716,6 @@
                 document.getElementById('cfgHargaPcs').value = appState.config.hargaPcs || 1200;
                 document.getElementById('cfgSatuanKemasan').value = appState.config.satuanKemasan || 'Terpal';
                 document.getElementById('cfgIsiPerSatuan').value = appState.config.isiPerSatuan || 50;
-                document.getElementById('cfgStokAwal').value = appState.config.stokAwal || 0;
                 document.getElementById('cfgManualLabaBarang').value = appState.config.manualLabaBarang || 500;
                 document.getElementById('cfgManualLabaBersih').value = appState.config.manualLabaBersih || 400;
             }
@@ -716,11 +725,10 @@
 
         function saveDataToDB() {
             if (appState.isAdmin) {
-                db.ref('admin_config').set({
+                db.ref('admin_config').update({
                     hargaPcs: appState.config.hargaPcs,
                     satuanKemasan: appState.config.satuanKemasan,
                     isiPerSatuan: appState.config.isiPerSatuan,
-                    stokAwal: appState.config.stokAwal,
                     stokDelta: appState.config.stokDelta,
                     manualLabaBarang: appState.config.manualLabaBarang,
                     manualLabaBersih: appState.config.manualLabaBersih
@@ -730,9 +738,37 @@
                 db.ref(dataPath).set({
                     penjualan: appState.dataPenjualan || [],
                     aktivitas: appState.dataAktivitas || [],
-                    stokDelta: appState.config.stokDelta || 0,
-                    stokAwal: appState.config.stokAwal || 0
+                    stokDelta: appState.config.stokDelta || 0
                 });
+            }
+        }
+
+        function previewAndSaveLogo(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let base64Img = e.target.result;
+                appState.logoUrl = base64Img;
+                setLogoUI(base64Img);
+                db.ref('users/' + currentUser.uid).update({ logoUrl: base64Img });
+                if (appState.isAdmin) {
+                    db.ref('admin_config').update({ logoUrl: base64Img });
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setLogoUI(url) {
+            const imgEl = document.getElementById('outletLogoImg');
+            const txtEl = document.getElementById('outletLogoText');
+            if (url) {
+                imgEl.src = url;
+                imgEl.classList.remove('hidden');
+                txtEl.classList.add('hidden');
+            } else {
+                imgEl.classList.add('hidden');
+                txtEl.classList.remove('hidden');
             }
         }
 
@@ -833,7 +869,7 @@
             reader.readAsText(file);
         }
 
-        // --- FITUR DOWNLOAD LAPORAN TXT (ADMIN) ---
+        // --- FITUR DOWNLOAD LAPORAN TXT PER CARD TUTUP BUKU ---
         function formatKonversiKemasan(pcs) {
             const isi = appState.config.isiPerSatuan || 50;
             const satuan = appState.config.satuanKemasan || 'Terpal';
@@ -841,81 +877,77 @@
             return `${pcs}Pcs (${jumlahKemasan} ${satuan})`;
         }
 
-        function downloadLaporanTxt() {
-            if (!appState.isAdmin) return;
+        function downloadArsipTxt(arsipId) {
+            let arsip = appState.dataTutupBuku.find(item => item.id === arsipId);
+            if (!arsip) {
+                alert("Data arsip tutup buku tidak ditemukan!");
+                return;
+            }
 
-            db.ref('outlets').once('value', snapshot => {
-                let outletsVal = snapshot.val() || {};
-                let textReport = "=== LAPORAN REKAPITULASI OUTLET CRS ===\n";
-                textReport += `Tanggal Cetak: ${new Date().toLocaleString('id-ID')}\n\n`;
+            let textReport = "=== LAPORAN REKAPITULASI TUTUP BUKU CRS ===\n";
+            textReport += `Periode : ${arsip.tglMulai} s.d ${arsip.tglAkhir}\n`;
+            textReport += `Outlet  : ${arsip.outlet || 'Pusat'}\n`;
+            textReport += `Waktu Eksekusi: ${arsip.waktuEksekusi}\n\n`;
 
-                Object.keys(outletsVal).forEach(outletId => {
-                    let outData = outletsVal[outletId];
-                    let outletName = outData.outletName || `Outlet (${outletId.substring(0,6)})`;
-                    
-                    textReport += `----------------------------------------\n`;
-                    textReport += `Nama Outlet: ${outletName}\n`;
-                    textReport += `----------------------------------------\n\n`;
+            textReport += `----------------------------------------\n`;
+            textReport += `Nama Outlet: ${arsip.outlet || 'Pusat'}\n`;
+            textReport += `----------------------------------------\n\n`;
 
-                    // 1. Penjualan Sales
-                    textReport += `Penjualan sales\n`;
-                    let pList = Array.isArray(outData.penjualan) ? outData.penjualan : Object.values(outData.penjualan || {});
-                    if (pList.length === 0) {
-                        textReport += `- Belum ada data penjualan\n`;
-                    } else {
-                        // Kelompokkan per nama sales
-                        let salesMap = {};
-                        pList.forEach(p => {
-                            let sName = p.sales || 'Tanpa Nama';
-                            salesMap[sName] = (salesMap[sName] || 0) + (p.terjual || 0);
-                        });
-                        Object.keys(salesMap).forEach(sName => {
-                            textReport += `Nama : ${sName}\n`;
-                            textReport += `Terjual : ${salesMap[sName]} Pcs\n`;
-                        });
-                    }
-                    textReport += `\n`;
-
-                    // 2. Pengeluaran Outlet
-                    textReport += `Pengeluaran outlet\n`;
-                    let aList = Array.isArray(outData.aktivitas) ? outData.aktivitas : Object.values(outData.aktivitas || {});
-                    let totalPengeluaranLabaBersih = 0;
-                    let totalPengeluaranLabaBarang = 0;
-                    let countWrPlus = 0, pcsWrPlus = 0;
-                    let countWrX = 0, pcsWrX = 0;
-                    let countWrMin = 0;
-
-                    aList.forEach(a => {
-                        if (a.tipe === 'pengeluaran') {
-                            if (a.sumber === 'laba_bersih') totalPengeluaranLabaBersih += (a.nominal || 0);
-                            else totalPengeluaranLabaBarang += (a.nominal || 0);
-                        } else if (a.tipe === 'stok_keluar') {
-                            if (a.subTipe === 'wr+') { countWrPlus++; pcsWrPlus += (a.pcs || 0); }
-                            else if (a.subTipe === 'wr×') { countWrX++; pcsWrX += (a.pcs || 0); }
-                            else if (a.subTipe === 'wr-') { countWrMin++; }
-                        }
-                    });
-
-                    textReport += `Laba bersih: Rp ${totalPengeluaranLabaBersih.toLocaleString('id-ID')}\n`;
-                    textReport += `Laba barang : Rp ${totalPengeluaranLabaBarang.toLocaleString('id-ID')}\n\n`;
-
-                    // 3. Warung (wr+, wr×, wr-)
-                    textReport += `Warung\n`;
-                    textReport += `Wr+ : ${formatKonversiKemasan(pcsWrPlus)}\n`;
-                    textReport += `Wr× : ${formatKonversiKemasan(pcsWrX)}\n`;
-                    textReport += `Wr- : ${countWrMin} warung\n\n`;
+            // Penjualan Sales dari arsip
+            textReport += `Penjualan sales\n`;
+            let pList = arsip.salesList || [];
+            if (pList.length === 0) {
+                textReport += `- Belum ada data penjualan pada periode ini\n`;
+            } else {
+                let salesMap = {};
+                pList.forEach(p => {
+                    let sName = p.sales || 'Tanpa Nama';
+                    salesMap[sName] = (salesMap[sName] || 0) + (p.terjual || 0);
                 });
+                Object.keys(salesMap).forEach(sName => {
+                    textReport += `Nama : ${sName}\n`;
+                    textReport += `Terjual : ${salesMap[sName]} Pcs\n`;
+                });
+            }
+            textReport += `\n`;
 
-                // Buat file blob dan unduh
-                let blob = new Blob([textReport], { type: 'text/plain;charset=utf-8' });
-                let url = URL.createObjectURL(blob);
-                let anchor = document.createElement('a');
-                anchor.href = url;
-                anchor.download = `Laporan_CRS_${new Date().toISOString().split('T')[0]}.txt`;
-                document.body.appendChild(anchor);
-                anchor.click();
-                anchor.remove();
+            // Pengeluaran Outlet dari arsip
+            textReport += `Pengeluaran outlet\n`;
+            let aList = arsip.aktivitasList || [];
+            let totalPengeluaranLabaBersih = 0;
+            let totalPengeluaranLabaBarang = 0;
+            let countWrPlus = 0, pcsWrPlus = 0;
+            let countWrX = 0, pcsWrX = 0;
+            let countWrMin = 0;
+
+            aList.forEach(a => {
+                if (a.tipe === 'pengeluaran') {
+                    if (a.sumber === 'laba_bersih') totalPengeluaranLabaBersih += (a.nominal || 0);
+                    else totalPengeluaranLabaBarang += (a.nominal || 0);
+                } else if (a.tipe === 'stok_keluar') {
+                    if (a.subTipe === 'wr+') { countWrPlus++; pcsWrPlus += (a.pcs || 0); }
+                    else if (a.subTipe === 'wr×') { countWrX++; pcsWrX += (a.pcs || 0); }
+                    else if (a.subTipe === 'wr-') { countWrMin++; }
+                }
             });
+
+            textReport += `Laba bersih: Rp ${totalPengeluaranLabaBersih.toLocaleString('id-ID')}\n`;
+            textReport += `Laba barang : Rp ${totalPengeluaranLabaBarang.toLocaleString('id-ID')}\n\n`;
+
+            // Warung
+            textReport += `Warung\n`;
+            textReport += `Wr+ : ${formatKonversiKemasan(pcsWrPlus)}\n`;
+            textReport += `Wr× : ${formatKonversiKemasan(pcsWrX)}\n`;
+            textReport += `Wr- : ${countWrMin} warung\n\n`;
+
+            let blob = new Blob([textReport], { type: 'text/plain;charset=utf-8' });
+            let url = URL.createObjectURL(blob);
+            let anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = `Laporan_TutupBuku_${arsip.tglMulai}_${arsip.tglAkhir}.txt`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -987,11 +1019,67 @@
                                     <h4 class="font-bold text-xs text-gray-800">${namaOutlet}</h4>
                                     <span class="text-[10px] text-emerald-600 font-semibold">Aktif Terhubung</span>
                                 </div>
+                                <button onclick="intipProfilOutlet('${uid}', '${namaOutlet}')" title="Intip Profil Outlet" class="bg-blue-600 hover:bg-blue-700 text-white text-xs p-2 rounded-lg shadow transition">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                             </div>
                         `;
                     }
                 });
             });
+        }
+
+        function intipProfilOutlet(outletUid, outletName) {
+            const contentEl = document.getElementById('inspectModalContent');
+            document.getElementById('inspectModalTitle').innerText = `Profil Outlet: ${outletName}`;
+            contentEl.innerHTML = `<p class="text-gray-500 text-center py-4">Memuat data outlet...</p>`;
+            document.getElementById('modalInspectOutlet').classList.remove('hidden');
+
+            db.ref(`outlets/${outletUid}`).once('value', snap => {
+                let data = snap.val() || {};
+                let pList = data.penjualan || [];
+                let aList = data.aktivitas || [];
+                let tList = data.tutupBuku || [];
+
+                let totalOmset = 0, totalTerjual = 0, totalPcsHilang = 0;
+                pList.forEach(p => { totalOmset += (p.totalRp || 0); totalTerjual += (p.terjual || 0); });
+                aList.forEach(a => {
+                    if (a.tipe === 'stok_keluar' && a.subTipe === 'wr×') totalPcsHilang += (a.pcs || 0);
+                });
+
+                let html = `
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 space-y-1">
+                        <p class="font-bold text-blue-900 text-sm">${outletName}</p>
+                        <p class="text-gray-600">Total Omset Aktif: <span class="font-bold text-blue-600">Rp ${totalOmset.toLocaleString('id-ID')}</span></p>
+                        <p class="text-gray-600">Total Terjual: <span class="font-bold text-teal-600">${totalTerjual} Pcs</span></p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="font-bold text-gray-700 uppercase text-[10px]">Riwayat Penjualan (${pList.length}):</p>
+                `;
+
+                if (pList.length === 0) {
+                    html += `<p class="text-gray-400 italic">Belum ada transaksi penjualan.</p>`;
+                } else {
+                    pList.forEach((p, idx) => {
+                        html += `<div class="bg-gray-50 p-2 rounded border text-[11px]">${idx+1}. Tgl: ${p.tgl} | Sales: ${p.sales} | Terjual: ${p.terjual} Pcs (Rp ${(p.totalRp||0).toLocaleString('id-ID')})</div>`;
+                    });
+                }
+
+                html += `</div><div class="space-y-1 mt-2"><p class="font-bold text-gray-700 uppercase text-[10px]">Arsip Tutup Buku (${tList.length}):</p>`;
+                if (tList.length === 0) {
+                    html += `<p class="text-gray-400 italic">Belum ada arsip tutup buku.</p>`;
+                } else {
+                    tList.forEach((t, idx) => {
+                        html += `<div class="bg-emerald-50 p-2 rounded border border-emerald-200 text-[11px]">${idx+1}. Periode ${t.tglMulai} - ${t.tglAkhir} | Omset: Rp ${(t.totalOmset||0).toLocaleString('id-ID')}</div>`;
+                    });
+                }
+                html += `</div>`;
+                contentEl.innerHTML = html;
+            });
+        }
+
+        function tutupModalInspect() {
+            document.getElementById('modalInspectOutlet').classList.add('hidden');
         }
 
         function applyRoleUI() {
@@ -1004,7 +1092,6 @@
             const adminMaintenanceSection = document.getElementById('adminMaintenanceSection');
             const formTutupBuku = document.getElementById('formTutupBuku');
             const tutupBukuDesc = document.getElementById('tutupBukuDesc');
-            const btnDownloadTxt = document.getElementById('btnDownloadTxt');
             
             if (appState.isAdmin) {
                 badge.innerText = 'Mode Admin';
@@ -1015,7 +1102,6 @@
                 outletStockPanel.classList.add('hidden');
                 adminConversionPanel.classList.remove('hidden');
                 adminMaintenanceSection.classList.remove('hidden');
-                if (btnDownloadTxt) btnDownloadTxt.classList.remove('hidden');
                 if (formTutupBuku) formTutupBuku.style.display = 'block';
                 if (tutupBukuDesc) tutupBukuDesc.innerText = 'Lakukan tutup buku untuk merangkum seluruh transaksi aktif dan memulai periode baru yang bersih.';
             } else {
@@ -1027,7 +1113,6 @@
                 outletStockPanel.classList.remove('hidden');
                 adminConversionPanel.classList.add('hidden');
                 adminMaintenanceSection.classList.add('hidden');
-                if (btnDownloadTxt) btnDownloadTxt.classList.add('hidden');
                 if (formTutupBuku) formTutupBuku.style.display = 'none';
                 if (tutupBukuDesc) tutupBukuDesc.innerText = 'Berikut adalah arsip riwayat tutup buku yang dilakukan oleh Admin pusat.';
             }
@@ -1082,7 +1167,7 @@
                     else if (a.subTipe === 'wr-') totalStokKeluarNet -= (a.pcs || 0);
                 }
             });
-            return Math.max(0, (appState.config.stokAwal || 0) + (appState.config.stokDelta || 0) - totalTerjual - totalStokKeluarNet);
+            return Math.max(0, (appState.config.stokDelta || 0) - totalTerjual - totalStokKeluarNet);
         }
 
         function hitungKonversiBawa() {
@@ -1096,7 +1181,6 @@
             appState.config.hargaPcs = parseFloat(document.getElementById('cfgHargaPcs').value) || 1200;
             appState.config.satuanKemasan = document.getElementById('cfgSatuanKemasan').value;
             appState.config.isiPerSatuan = parseFloat(document.getElementById('cfgIsiPerSatuan').value) || 50;
-            appState.config.stokAwal = parseFloat(document.getElementById('cfgStokAwal').value) || 0;
             appState.config.manualLabaBarang = parseFloat(document.getElementById('cfgManualLabaBarang').value) || 0;
             appState.config.manualLabaBersih = parseFloat(document.getElementById('cfgManualLabaBersih').value) || 0;
             
@@ -1107,13 +1191,9 @@
 
         function simpanIdentitasOutlet() {
             const nama = document.getElementById('cfgNamaOutlet').value;
-            const logo = document.getElementById('cfgLogoOutlet').value.toUpperCase();
-            
             appState.currentOutlet = nama;
-            appState.logoText = logo;
             
             document.getElementById('headerOutletName').innerText = nama;
-            document.getElementById('outletLogoText').innerText = logo;
             db.ref('users/' + currentUser.uid).update({ outletName: nama });
             alert('Identitas outlet diperbarui!');
         }
@@ -1247,7 +1327,9 @@
                 kerugianHilang: totalPcsHilang * (appState.config.manualLabaBarang || 0),
                 totalPcsHilang,
                 stokSisaAkhir: stokAkhirPeriode,
-                outlet: appState.currentOutlet
+                outlet: appState.currentOutlet,
+                salesList: listPenjualan,
+                aktivitasList: listAktivitas
             };
 
             if (!Array.isArray(appState.dataTutupBuku)) {
@@ -1255,9 +1337,7 @@
             }
             appState.dataTutupBuku.push(arsipBaru);
 
-            appState.config.stokAwal = stokAkhirPeriode;
             appState.config.stokDelta = 0;
-
             appState.dataPenjualan = [];
             appState.dataAktivitas = [];
 
@@ -1277,7 +1357,7 @@
                 }
             });
             
-            alert(`Tutup buku berhasil! Sisa stok akhir sejumlah ${stokAkhirPeriode} Pcs telah dikunci sebagai stok awal baru.`);
+            alert(`Tutup buku berhasil! Sisa stok akhir sejumlah ${stokAkhirPeriode} Pcs telah dikunci.`);
             switchTab('Dashboard');
         }
 
@@ -1369,6 +1449,8 @@
                     <div class="flex justify-between border-t pt-1.5 mt-1.5 font-semibold text-purple-700"><span>- Stok Sisa Akhir:</span> <span>${arsip.stokSisaAkhir || 0} Pcs</span></div>
                 </div>
             `;
+            // Atur tombol download Txt pada modal agar memanggil arsip terkait
+            document.getElementById('modalDownloadTxtBtn').setAttribute('onclick', `downloadArsipTxt(${arsip.id})`);
             document.getElementById('modalDetailTutupBuku').classList.remove('hidden');
         }
 
