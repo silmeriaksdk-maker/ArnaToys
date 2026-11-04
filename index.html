@@ -526,7 +526,7 @@
         const db = firebase.database();
 
         let currentUser = null;
-        let listenersInitialized = false; // Mencegah duplikasi listener real-time
+        let listenersInitialized = false;
         const SECRET_MAINTENANCE_PASS = "531208";
 
         let appState = {
@@ -577,11 +577,20 @@
 
             auth.createUserWithEmailAndPassword(email, pass)
                 .then(cred => {
-                    db.ref('users/' + cred.user.uid).set({
-                        email: email,
-                        outletName: outletName,
-                        isAdmin: false
-                    });
+                    const uid = cred.user.uid;
+                    let updates = {};
+                    updates[`users/${uid}`] = { email: email, outletName: outletName, isAdmin: false };
+                    updates[`outlets/${uid}`] = { 
+                        outletName: outletName, 
+                        penjualan: null, 
+                        aktivitas: null, 
+                        stokDelta: 0, 
+                        stokAwal: 0 
+                    };
+                    return db.ref().update(updates);
+                })
+                .then(() => {
+                    alert("Registrasi outlet berhasil!");
                 })
                 .catch(err => alert("Gagal Daftar: " + err.message));
         }
@@ -616,7 +625,6 @@
                     
                     applyRoleUI();
                     
-                    // Inisialisasi sinkronisasi database hanya sekali untuk menghindari memory leak
                     if (!listenersInitialized) {
                         initDatabaseListeners();
                         listenersInitialized = true;
@@ -632,7 +640,6 @@
         }
 
         function initDatabaseListeners() {
-            // Sinkronisasi konfigurasi admin
             db.ref('admin_config').on('value', snap => {
                 if (snap.exists()) {
                     let cfg = snap.val();
@@ -650,7 +657,6 @@
                 }
             });
 
-            // Sinkronisasi Arsip Tutup Buku global / per outlet
             db.ref('tutupBuku').on('value', snap => {
                 let valTutupBuku = snap.val() || [];
                 let parsedList = Array.isArray(valTutupBuku) ? valTutupBuku : Object.values(valTutupBuku);
@@ -662,7 +668,6 @@
                 renderArsipTutupBuku();
             });
 
-            // Sinkronisasi Data Penjualan & Aktivitas Berdasarkan Peran (Admin vs Outlet)
             db.ref('outlets').on('value', outletSnap => {
                 let outletsVal = outletSnap.val() || {};
                 
@@ -769,7 +774,7 @@
                 currentUser.delete().then(() => {
                     alert("Akun dan data berhasil dihapus permanen.");
                 }).catch(err => {
-                    alert("Gagal menghapus akun Auth: " + err.message + "\n(Mungkin Anda perlu login ulang terlebih dahulu).");
+                    alert("Gagal menghapus akun Auth: " + err.message);
                 });
             }).catch(err => {
                 alert("Gagal menghapus data database: " + err.message);
@@ -859,7 +864,6 @@
                     textReport += `Nama Outlet: ${outletName}\n`;
                     textReport += `----------------------------------------\n\n`;
 
-                    // 1. Penjualan Sales
                     textReport += `Penjualan sales\n`;
                     let pList = outData.penjualan ? Object.values(outData.penjualan) : [];
                     if (pList.length === 0) {
@@ -877,7 +881,6 @@
                     }
                     textReport += `\n`;
 
-                    // 2. Pengeluaran Outlet
                     textReport += `Pengeluaran outlet\n`;
                     let aList = outData.aktivitas ? Object.values(outData.aktivitas) : [];
                     let totalPengeluaranLabaBersih = 0;
@@ -900,7 +903,6 @@
                     textReport += `Laba bersih: Rp ${totalPengeluaranLabaBersih.toLocaleString('id-ID')}\n`;
                     textReport += `Laba barang : Rp ${totalPengeluaranLabaBarang.toLocaleString('id-ID')}\n\n`;
 
-                    // 3. Warung (wr+, wr×, wr-)
                     textReport += `Warung\n`;
                     textReport += `Wr+ : ${formatKonversiKemasan(pcsWrPlus)}\n`;
                     textReport += `Wr× : ${formatKonversiKemasan(pcsWrX)}\n`;
@@ -911,7 +913,7 @@
                 let url = URL.createObjectURL(blob);
                 let anchor = document.createElement('a');
                 anchor.href = url;
-                anchor.download = `Laporan_CRS_${new Date().toISOString().split('T')[0]}.txt`;
+                anchor.download = `Laporan_CRS_${new Date().toISOString().split('T')[0]}.json`; // atau .txt
                 document.body.appendChild(anchor);
                 anchor.click();
                 anchor.remove();
@@ -964,32 +966,31 @@
             }
         }
 
+        // --- FUNGSI LOAD OUTLETS YANG SUDAH DIPERBAIKI ---
         function loadOutletsList() {
             const listEl = document.getElementById('drawerOutletList');
             listEl.innerHTML = `<p class="text-xs text-gray-500">Memuat daftar outlet...</p>`;
 
-            db.ref('users').once('value', snapshot => {
-                let usersVal = snapshot.val();
-                if (!usersVal) {
+            db.ref('outlets').once('value', snapshot => {
+                let outletsVal = snapshot.val();
+                if (!outletsVal) {
                     listEl.innerHTML = `<p class="text-xs text-gray-400 italic">Belum ada outlet terdaftar.</p>`;
                     return;
                 }
                 
                 listEl.innerHTML = `<p class="text-xs font-bold text-gray-700 mb-2">Outlet Terdaftar (Otomatis):</p>`;
                 
-                Object.keys(usersVal).forEach(uid => {
-                    let uData = usersVal[uid];
-                    if (!uData.isAdmin) {
-                        let namaOutlet = uData.outletName || `Outlet (${uid.substring(0,6)}...)`;
-                        listEl.innerHTML += `
-                            <div class="p-2.5 border rounded-xl bg-gray-50 flex justify-between items-center mb-2">
-                                <div>
-                                    <h4 class="font-bold text-xs text-gray-800">${namaOutlet}</h4>
-                                    <span class="text-[10px] text-emerald-600 font-semibold">Aktif Terhubung</span>
-                                </div>
+                Object.keys(outletsVal).forEach(uid => {
+                    let uData = outletsVal[uid];
+                    let namaOutlet = uData.outletName || `Outlet (${uid.substring(0,6)}...)`;
+                    listEl.innerHTML += `
+                        <div class="p-2.5 border rounded-xl bg-gray-50 flex justify-between items-center mb-2">
+                            <div>
+                                <h4 class="font-bold text-xs text-gray-800">${namaOutlet}</h4>
+                                <span class="text-[10px] text-emerald-600 font-semibold">Aktif Terhubung</span>
                             </div>
-                        `;
-                    }
+                        </div>
+                    `;
                 });
             });
         }
@@ -1115,6 +1116,7 @@
             document.getElementById('headerOutletName').innerText = nama;
             document.getElementById('outletLogoText').innerText = logo;
             db.ref('users/' + currentUser.uid).update({ outletName: nama });
+            db.ref('outlets/' + currentUser.uid).update({ outletName: nama });
             alert('Identitas outlet diperbarui!');
         }
 
@@ -1132,7 +1134,6 @@
             }
         }
 
-        // --- PENGGUNAAN .push() UNTUK KEAMANAN DATA REALTIME PARALEL ---
         function handlePenjualanSubmit(e) {
             e.preventDefault();
             const tgl = document.getElementById('pTgl').value;
