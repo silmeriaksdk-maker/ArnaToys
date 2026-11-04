@@ -380,7 +380,6 @@
                     </div>
 
                     <div id="maintenanceUnlockedView" class="space-y-3 hidden">
-                        <!-- Hapus Akun & Data Firebase -->
                         <div class="bg-slate-800 p-3 rounded-lg space-y-1.5 border border-slate-700">
                             <span class="text-[11px] font-bold text-rose-400 block"><i class="fa-solid fa-user-xmark mr-1"></i> Hapus Akun & Data</span>
                             <p class="text-[10px] text-slate-400">Menghapus akun aktif ini secara permanen dari Firebase Auth beserta seluruh data transaksinya.</p>
@@ -389,7 +388,6 @@
                             </button>
                         </div>
 
-                        <!-- Pemeliharaan Database (Hapus Sampah Data) -->
                         <div class="bg-slate-800 p-3 rounded-lg space-y-1.5 border border-slate-700">
                             <span class="text-[11px] font-bold text-purple-400 block"><i class="fa-solid fa-broom mr-1"></i> Pemeliharaan Database (Hapus Sampah)</span>
                             <p class="text-[10px] text-slate-400">Menghapus data transaksi dari akun/email yang sudah tidak terdaftar di sistem.</p>
@@ -398,7 +396,6 @@
                             </button>
                         </div>
 
-                        <!-- Pencadangan & Pemulihan (Backup & Restore) -->
                         <div class="bg-slate-800 p-3 rounded-lg space-y-2 border border-slate-700">
                             <span class="text-[11px] font-bold text-blue-400 block"><i class="fa-solid fa-database mr-1"></i> Pencadangan & Pemulihan</span>
                             <div class="grid grid-cols-2 gap-2">
@@ -623,16 +620,17 @@
         }
 
         function syncDataFromDB() {
+            // Sinkronisasi konfigurasi admin
             db.ref('admin_config').on('value', snap => {
                 if (snap.exists()) {
                     let cfg = snap.val();
                     appState.config.hargaPcs = cfg.hargaPcs ?? appState.config.hargaPcs;
                     appState.config.satuanKemasan = cfg.satuanKemasan ?? appState.config.satuanKemasan;
                     appState.config.isiPerSatuan = cfg.isiPerSatuan ?? appState.config.isiPerSatuan;
-                    appState.config.stokAwal = cfg.stokAwal ?? appState.config.stokAwal;
                     appState.config.manualLabaBarang = cfg.manualLabaBarang ?? appState.config.manualLabaBarang;
                     appState.config.manualLabaBersih = cfg.manualLabaBersih ?? appState.config.manualLabaBersih;
                     if (appState.isAdmin) {
+                        appState.config.stokAwal = cfg.stokAwal ?? appState.config.stokAwal;
                         appState.config.stokDelta = cfg.stokDelta ?? appState.config.stokDelta;
                     }
                     updateUIConfigFields();
@@ -640,12 +638,19 @@
                 }
             });
 
+            // Sinkronisasi Arsip Tutup Buku global / per outlet
+            db.ref('tutupBuku').on('value', snap => {
+                let valTutupBuku = snap.val() || [];
+                appState.dataTutupBuku = Array.isArray(valTutupBuku) ? valTutupBuku : Object.values(valTutupBuku);
+                renderArsipTutupBuku();
+            });
+
             if (appState.isAdmin) {
+                // Admin membaca gabungan data penjualan & aktivitas dari seluruh outlet
                 db.ref('outlets').on('value', outletSnap => {
                     let outletsVal = outletSnap.val() || {};
                     let combinedPenjualan = [];
                     let combinedAktivitas = [];
-                    let combinedTutupBuku = [];
 
                     Object.values(outletsVal).forEach(outletData => {
                         if (outletData.penjualan) {
@@ -656,39 +661,32 @@
                             let aList = Array.isArray(outletData.aktivitas) ? outletData.aktivitas : Object.values(outletData.aktivitas);
                             combinedAktivitas = combinedAktivitas.concat(aList);
                         }
-                        if (outletData.tutupBuku) {
-                            let tList = Array.isArray(outletData.tutupBuku) ? outletData.tutupBuku : Object.values(outletData.tutupBuku);
-                            combinedTutupBuku = combinedTutupBuku.concat(tList);
-                        }
                     });
 
                     appState.dataPenjualan = combinedPenjualan;
                     appState.dataAktivitas = combinedAktivitas;
-                    appState.dataTutupBuku = combinedTutupBuku;
 
                     renderTabelPenjualan();
                     renderAktivitas();
-                    renderArsipTutupBuku();
                     refreshDashboard();
                 });
             } else {
+                // Outlet hanya membaca data miliknya sendiri di bawah path 'outlets/uid'
                 db.ref(`outlets/${currentUser.uid}`).on('value', outletSnap => {
                     const outVal = outletSnap.val();
                     if (outVal) {
                         appState.dataPenjualan = outVal.penjualan || [];
                         appState.dataAktivitas = outVal.aktivitas || [];
-                        appState.dataTutupBuku = outVal.tutupBuku || [];
-                        if (outVal.stokDelta !== undefined) {
-                            appState.config.stokDelta = outVal.stokDelta;
-                        }
+                        if (outVal.stokDelta !== undefined) appState.config.stokDelta = outVal.stokDelta;
+                        if (outVal.stokAwal !== undefined) appState.config.stokAwal = outVal.stokAwal;
                     } else {
                         appState.dataPenjualan = [];
                         appState.dataAktivitas = [];
-                        appState.dataTutupBuku = [];
+                        appState.config.stokDelta = 0;
+                        appState.config.stokAwal = 0;
                     }
                     renderTabelPenjualan();
                     renderAktivitas();
-                    renderArsipTutupBuku();
                     refreshDashboard();
                 });
             }
@@ -709,14 +707,22 @@
 
         function saveDataToDB() {
             if (appState.isAdmin) {
-                db.ref('admin_config').set(appState.config || {});
+                db.ref('admin_config').set({
+                    hargaPcs: appState.config.hargaPcs,
+                    satuanKemasan: appState.config.satuanKemasan,
+                    isiPerSatuan: appState.config.isiPerSatuan,
+                    stokAwal: appState.config.stokAwal,
+                    stokDelta: appState.config.stokDelta,
+                    manualLabaBarang: appState.config.manualLabaBarang,
+                    manualLabaBersih: appState.config.manualLabaBersih
+                });
             } else {
                 let dataPath = `outlets/${currentUser.uid}`;
                 db.ref(dataPath).set({
                     penjualan: appState.dataPenjualan || [],
                     aktivitas: appState.dataAktivitas || [],
-                    tutupBuku: appState.dataTutupBuku || [],
-                    stokDelta: appState.config.stokDelta || 0
+                    stokDelta: appState.config.stokDelta || 0,
+                    stokAwal: appState.config.stokAwal || 0
                 });
             }
         }
@@ -743,15 +749,12 @@
             if (!confirmMsg) return;
 
             let uid = currentUser.uid;
-            
-            // Hapus data realtime database terkait
             let promises = [
                 db.ref('users/' + uid).remove(),
                 db.ref('outlets/' + uid).remove()
             ];
 
             Promise.all(promises).then(() => {
-                // Hapus akun Authentication
                 currentUser.delete().then(() => {
                     alert("Akun dan data berhasil dihapus permanen.");
                 }).catch(err => {
@@ -942,7 +945,7 @@
                 if (!isNaN(addVal) && addVal > 0) {
                     appState.config.stokDelta += addVal;
                     saveDataToDB();
-                    alert(`Berhasil menambahkan ${addVal} Pcs ke stok gudang!`);
+                    alert(`Berhasil menambahkan ${addVal} Pcs ke stok gudang outlet!`);
                 }
             }
         }
@@ -950,7 +953,7 @@
         function adminAdjustStok(mode) {
             let stokSekarang = hitungStokAktifFisik();
             let actionName = mode === 'tambah' ? 'penambahan' : 'pengurangan';
-            let input = prompt(`Stok gudang saat ini: ${stokSekarang} Pcs.\nMasukkan jumlah ${actionName} stok (Pcs):`, "1000");
+            let input = prompt(`Stok gudang pusat saat ini: ${stokSekarang} Pcs.\nMasukkan jumlah ${actionName} stok (Pcs):`, "1000");
             if (input !== null) {
                 let val = parseFloat(input);
                 if (!isNaN(val) && val > 0) {
@@ -964,7 +967,7 @@
                         appState.config.stokDelta -= val;
                     }
                     saveDataToDB();
-                    alert(`Stok gudang berhasil diperbarui.`);
+                    alert(`Stok gudang pusat berhasil diperbarui.`);
                 }
             }
         }
@@ -1002,7 +1005,7 @@
             
             document.getElementById('labelSatuanBawa').innerText = `Jumlah ${appState.config.satuanKemasan}`;
             saveDataToDB();
-            alert('Pengaturan konversi & nilai laba berhasil disinkronkan ke seluruh outlet secara otomatis!');
+            alert('Pengaturan konversi & nilai laba berhasil disinkronkan ke seluruh outlet!');
         }
 
         function simpanIdentitasOutlet() {
@@ -1057,7 +1060,8 @@
                 bawaStr: `${jmlBawaSatuan} ${appState.config.satuanKemasan || 'Terpal'} (${bawaPcs} Pcs)`,
                 sisa: sisaPcs,
                 terjual: terjualPcs,
-                totalRp
+                totalRp,
+                outlet: appState.currentOutlet
             });
             
             document.getElementById('formPenjualan').reset();
@@ -1145,7 +1149,8 @@
                 totalPengeluaran,
                 kerugianHilang: totalPcsHilang * (appState.config.manualLabaBarang || 0),
                 totalPcsHilang,
-                stokSisaAkhir: stokAkhirPeriode
+                stokSisaAkhir: stokAkhirPeriode,
+                outlet: appState.currentOutlet
             };
 
             if (!Array.isArray(appState.dataTutupBuku)) {
@@ -1162,6 +1167,7 @@
             db.ref('admin_config').set(appState.config);
             db.ref('tutupBuku').set(appState.dataTutupBuku);
 
+            // Kosongkan transaksi aktif seluruh outlet secara otomatis
             db.ref('outlets').once('value', snapshot => {
                 let outletsVal = snapshot.val();
                 if (outletsVal) {
@@ -1193,7 +1199,7 @@
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-2.5 font-medium">${index + 1}</td>
                         <td class="p-2.5">${item.tgl}</td>
-                        <td class="p-2.5">${item.sales}</td>
+                        <td class="p-2.5">${item.sales} <span class="block text-[9px] text-gray-400">(${item.outlet || 'Pusat'})</span></td>
                         <td class="p-2.5">${item.bawaStr}</td>
                         <td class="p-2.5">${item.sisa} Pcs</td>
                         <td class="p-2.5 font-semibold text-blue-600">${item.terjual} Pcs</td>
@@ -1230,6 +1236,11 @@
         function renderArsipTutupBuku() {
             const container = document.getElementById('listTutupBukuContainer');
             let listTutupBuku = Array.isArray(appState.dataTutupBuku) ? appState.dataTutupBuku : Object.values(appState.dataTutupBuku || {});
+
+            // Jika outlet, saring riwayat tutup buku hanya yang terkait atau biarkan arsip global pusat
+            if (!appState.isAdmin) {
+                // Outlet melihat arsip riwayat tutup buku
+            }
 
             if (listTutupBuku.length === 0) {
                 container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Belum ada riwayat tutup buku tercatat.</p>`;
