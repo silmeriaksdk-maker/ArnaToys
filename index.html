@@ -363,13 +363,57 @@
                             </button>
                         </div>
                     </div>
+                </div>
 
-                    <!-- TOMBOL BERSIHKAN SAMPAH DATA FIREBASE (KHUSUS ADMIN) -->
-                    <div class="bg-rose-50 border border-rose-200 rounded-xl p-4 shadow-sm space-y-2 mt-3">
-                        <h3 class="text-xs font-bold text-rose-800 uppercase border-b border-rose-200 pb-2"><i class="fa-solid fa-trash-can mr-1"></i> Pemeliharaan Database (Hapus Sampah Data)</h3>
-                        <p class="text-[11px] text-rose-700">Menghapus data/transaksi sisa dari akun email yang sudah tidak terdaftar di sistem.</p>
-                        <button onclick="bersihkanSampahDatabase()" class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs py-2.5 rounded-lg font-medium shadow transition">
-                            <i class="fa-solid fa-broom mr-1"></i> Bersihkan Sampah Data Akun Tidak Terdaftar
+                <!-- MENU MAINTENANCE TERPROTEKSI (KHUSUS ADMIN) -->
+                <div id="adminMaintenanceSection" class="bg-slate-900 text-white rounded-xl p-4 shadow-md space-y-3 hidden">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400"><i class="fa-solid fa-screwdriver-wrench mr-1.5"></i> Menu Maintenance Sistem</h3>
+                        <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">Protected</span>
+                    </div>
+
+                    <div id="maintenanceLockedView" class="text-center py-3 space-y-2">
+                        <p class="text-xs text-slate-400">Akses menu maintenance dikunci demi keamanan data.</p>
+                        <button onclick="bukaMenuMaintenance()" class="w-full bg-amber-600 hover:bg-amber-700 text-white text-xs py-2.5 rounded-lg font-medium shadow transition">
+                            <i class="fa-solid fa-lock-open mr-1"></i> Masuk Menu Maintenance
+                        </button>
+                    </div>
+
+                    <div id="maintenanceUnlockedView" class="space-y-3 hidden">
+                        <!-- Hapus Akun & Data Firebase -->
+                        <div class="bg-slate-800 p-3 rounded-lg space-y-1.5 border border-slate-700">
+                            <span class="text-[11px] font-bold text-rose-400 block"><i class="fa-solid fa-user-xmark mr-1"></i> Hapus Akun & Data</span>
+                            <p class="text-[10px] text-slate-400">Menghapus akun aktif ini secara permanen dari Firebase Auth beserta seluruh data transaksinya.</p>
+                            <button onclick="hapusAkunDanDataFirebase()" class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs py-2 rounded font-medium shadow transition">
+                                Hapus Akun & Data Saya
+                            </button>
+                        </div>
+
+                        <!-- Pemeliharaan Database (Hapus Sampah Data) -->
+                        <div class="bg-slate-800 p-3 rounded-lg space-y-1.5 border border-slate-700">
+                            <span class="text-[11px] font-bold text-purple-400 block"><i class="fa-solid fa-broom mr-1"></i> Pemeliharaan Database (Hapus Sampah)</span>
+                            <p class="text-[10px] text-slate-400">Menghapus data transaksi dari akun/email yang sudah tidak terdaftar di sistem.</p>
+                            <button onclick="bersihkanSampahDatabase()" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs py-2 rounded font-medium shadow transition">
+                                Bersihkan Sampah Data
+                            </button>
+                        </div>
+
+                        <!-- Pencadangan & Pemulihan (Backup & Restore) -->
+                        <div class="bg-slate-800 p-3 rounded-lg space-y-2 border border-slate-700">
+                            <span class="text-[11px] font-bold text-blue-400 block"><i class="fa-solid fa-database mr-1"></i> Pencadangan & Pemulihan</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="backupDatabaseJson()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded font-medium shadow transition">
+                                    <i class="fa-solid fa-download mr-1"></i> Cadangkan
+                                </button>
+                                <label class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2 rounded font-medium shadow transition text-center cursor-pointer flex items-center justify-center">
+                                    <i class="fa-solid fa-upload mr-1"></i> Pulihkan
+                                    <input type="file" id="restoreFile" accept=".json" onchange="restoreDatabaseJson(event)" class="hidden">
+                                </label>
+                            </div>
+                        </div>
+
+                        <button onclick="tutupMenuMaintenance()" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs py-2 rounded font-medium transition">
+                            <i class="fa-solid fa-lock mr-1"></i> Kunci Kembali
                         </button>
                     </div>
                 </div>
@@ -480,6 +524,8 @@
         const db = firebase.database();
 
         let currentUser = null;
+        const SECRET_MAINTENANCE_PASS = "531208";
+
         let appState = {
             isAdmin: true,
             currentOutlet: 'Pusat / Admin Utama',
@@ -577,7 +623,6 @@
         }
 
         function syncDataFromDB() {
-            // Sinkronisasi konfigurasi admin ke semua (admin & outlet)
             db.ref('admin_config').on('value', snap => {
                 if (snap.exists()) {
                     let cfg = snap.val();
@@ -676,10 +721,50 @@
             }
         }
 
-        // FUNGSI PEMELIHARAAN: MENGHAPUS DATA DARI AKUN/GMAIL YANG SUDAH TIDAK TERDAFTAR DI FIREBASE
+        // --- FITUR MAINTENANCE ---
+        function bukaMenuMaintenance() {
+            let pwd = prompt("Masukkan Sandi Maintenance:");
+            if (pwd === SECRET_MAINTENANCE_PASS) {
+                document.getElementById('maintenanceLockedView').classList.add('hidden');
+                document.getElementById('maintenanceUnlockedView').classList.remove('hidden');
+            } else if (pwd !== null) {
+                alert("Sandi salah!");
+            }
+        }
+
+        function tutupMenuMaintenance() {
+            document.getElementById('maintenanceUnlockedView').classList.add('hidden');
+            document.getElementById('maintenanceLockedView').classList.remove('hidden');
+        }
+
+        function hapusAkunDanDataFirebase() {
+            if (!currentUser) return;
+            let confirmMsg = confirm("PERINGATAN KRITIS: Akun dan seluruh data Anda di Firebase akan dihapus secara permanen. Lanjutkan?");
+            if (!confirmMsg) return;
+
+            let uid = currentUser.uid;
+            
+            // Hapus data realtime database terkait
+            let promises = [
+                db.ref('users/' + uid).remove(),
+                db.ref('outlets/' + uid).remove()
+            ];
+
+            Promise.all(promises).then(() => {
+                // Hapus akun Authentication
+                currentUser.delete().then(() => {
+                    alert("Akun dan data berhasil dihapus permanen.");
+                }).catch(err => {
+                    alert("Gagal menghapus akun Auth: " + err.message + "\n(Mungkin Anda perlu login ulang terlebih dahulu).");
+                });
+            }).catch(err => {
+                alert("Gagal menghapus data database: " + err.message);
+            });
+        }
+
         function bersihkanSampahDatabase() {
             if (!appState.isAdmin) return;
-            if (!confirm("Apakah Anda yakin ingin membersihkan data transaksi dari akun/email yang sudah tidak terdaftar?")) return;
+            if (!confirm("Apakah Anda yakin ingin membersihkan data dari akun/email yang sudah tidak terdaftar?")) return;
 
             db.ref('users').once('value', userSnap => {
                 let activeUsers = userSnap.val() || {};
@@ -690,16 +775,50 @@
                     let countRemoved = 0;
 
                     Object.keys(outletsData).forEach(outletId => {
-                        // Jika UID outlet tidak ada di daftar user valid, hapus sebagai sampah data
                         if (!validIds.includes(outletId)) {
                             db.ref(`outlets/${outletId}`).remove();
                             countRemoved++;
                         }
                     });
 
-                    alert(`Pembersihan selesai! Berhasil menghapus ${countRemoved} data transaksi dari akun yang sudah tidak terdaftar.`);
+                    alert(`Pembersihan selesai! Berhasil menghapus ${countRemoved} data dari akun yang tidak terdaftar.`);
                 });
             });
+        }
+
+        function backupDatabaseJson() {
+            db.ref().once('value', snapshot => {
+                let data = snapshot.val();
+                let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+                let downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `CRS_Backup_${new Date().toISOString().split('T')[0]}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            });
+        }
+
+        function restoreDatabaseJson(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let jsonData = JSON.parse(e.target.result);
+                    if (confirm("PERINGATAN: Memulihkan database akan menimpa seluruh data saat ini dengan data dari file cadangan. Lanjutkan?")) {
+                        db.ref().set(jsonData).then(() => {
+                            alert("Pemulihan data (Restore) berhasil dilakukan!");
+                        }).catch(err => {
+                            alert("Gagal memulihkan data: " + err.message);
+                        });
+                    }
+                } catch (err) {
+                    alert("Format file JSON tidak valid!");
+                }
+            };
+            reader.readAsText(file);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -785,6 +904,7 @@
             const hamburgerBtn = document.getElementById('btnHamburger');
             const outletStockPanel = document.getElementById('outletStockPanel');
             const adminConversionPanel = document.getElementById('adminConversionPanel');
+            const adminMaintenanceSection = document.getElementById('adminMaintenanceSection');
             const formTutupBuku = document.getElementById('formTutupBuku');
             const tutupBukuDesc = document.getElementById('tutupBukuDesc');
             
@@ -796,6 +916,7 @@
                 hamburgerBtn.style.display = 'block';
                 outletStockPanel.classList.add('hidden');
                 adminConversionPanel.classList.remove('hidden');
+                adminMaintenanceSection.classList.remove('hidden');
                 if (formTutupBuku) formTutupBuku.style.display = 'block';
                 if (tutupBukuDesc) tutupBukuDesc.innerText = 'Lakukan tutup buku untuk merangkum seluruh transaksi aktif dan memulai periode baru yang bersih.';
             } else {
@@ -806,6 +927,7 @@
                 hamburgerBtn.style.display = 'none'; 
                 outletStockPanel.classList.remove('hidden');
                 adminConversionPanel.classList.add('hidden');
+                adminMaintenanceSection.classList.add('hidden');
                 if (formTutupBuku) formTutupBuku.style.display = 'none';
                 if (tutupBukuDesc) tutupBukuDesc.innerText = 'Berikut adalah arsip riwayat tutup buku yang dilakukan oleh Admin pusat.';
             }
