@@ -89,7 +89,6 @@
 
             <!-- TAB 1: DASHBOARD -->
             <section id="tabDashboard" class="p-4 space-y-4">
-                <!-- BANNER NOTIFIKASI INSPEKSI OUTLET -->
                 <div id="inspectBanner" class="bg-amber-100 border-l-4 border-amber-500 text-amber-800 p-3 rounded-r-lg hidden flex justify-between items-center shadow-sm">
                     <div class="text-xs">
                         <span class="font-bold block"><i class="fa-solid fa-eye mr-1"></i> Mode Pemantauan Outlet</span>
@@ -212,7 +211,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Keterangan (Wajib)</label>
-                        <input type="text" id="exKet" placeholder="Contoh: Beli bensin operasional" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <input type="text" id="exKet" placeholder="Contoh: Beli bensin operasional / Galon" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -222,8 +221,8 @@
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 mb-1">Sumber Potong</label>
                             <select id="exSumber" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <option value="laba_barang">Laba Barang (Kotor)</option>
                                 <option value="laba_bersih">Laba Bersih</option>
+                                <option value="laba_barang">Laba Barang (Kotor)</option>
                             </select>
                         </div>
                     </div>
@@ -269,33 +268,27 @@
                 </div>
             </section>
 
-            <!-- TAB 4: TUTUP BUKU -->
-            <section id="tabTutupBuku" class="p-4 space-y-4 hidden">
-                <h2 class="text-lg font-bold text-gray-800">Tutup Buku Periode</h2>
-                <p class="text-xs text-gray-500" id="tutupBukuDesc">Lakukan tutup buku untuk merangkum seluruh transaksi aktif dan memulai periode baru yang bersih.</p>
-
-                <form id="formTutupBuku" onsubmit="handleTutupBukuSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
-                    <h3 class="text-xs font-bold text-blue-600 uppercase"><i class="fa-solid fa-lock mr-1"></i> Proses Penutupan Buku (Admin)</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Mulai</label>
-                            <input type="date" id="tbTglMulai" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Akhir</label>
-                            <input type="date" id="tbTglAkhir" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
-                        <i class="fa-solid fa-check-circle mr-1.5"></i> Konfirmasi & Tutup Buku Sekaligus (Admin & Outlet)
+            <!-- TAB 4: REKAP LAPORAN (SISTEM REKAP AKURAT) -->
+            <section id="tabRekap" class="p-4 space-y-4 hidden">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-800">Format Rekap Laporan</h2>
+                    <button onclick="generateRekapFormat()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+                        <i class="fa-solid fa-sync mr-1"></i> Perbarui Rekap
                     </button>
-                </form>
+                </div>
+                <p class="text-xs text-gray-500">Rangkuman data operasional dan keuangan yang siap disalin atau diunduh sebagai laporan resmi.</p>
 
-                <div class="space-y-3 mt-4">
-                    <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2">Arsip Riwayat Tutup Buku (Per Periode)</h3>
-                    <div id="listTutupBukuContainer" class="space-y-2.5">
-                        <p class="text-xs text-gray-400 italic text-center py-4">Belum ada riwayat tutup buku tercatat.</p>
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <span class="text-xs font-bold text-gray-700 uppercase"><i class="fa-solid fa-clipboard text-blue-600 mr-1"></i> Teks Format Rekap</span>
+                        <button onclick="copyRekapText()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1 rounded font-medium transition">
+                            <i class="fa-solid fa-copy mr-1"></i> Salin Teks
+                        </button>
                     </div>
+                    <textarea id="rekapTextArea" readonly rows="13" class="w-full text-xs font-mono bg-gray-50 border rounded-lg p-2.5 focus:outline-none text-gray-700 select-all"></textarea>
+                    <button onclick="downloadRekapTxt()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs py-2.5 rounded-lg shadow transition flex items-center justify-center">
+                        <i class="fa-solid fa-file-arrow-down mr-1.5"></i> Unduh File Rekap (.txt)
+                    </button>
                 </div>
             </section>
 
@@ -315,10 +308,10 @@
                             <i class="fa-solid fa-plus mr-1"></i> Tambah Stok
                         </button>
                     </div>
-                    <p class="text-[11px] text-gray-500 italic">*Mode Outlet hanya dapat melakukan penambahan stok gudang.</p>
+                    <p class="text-[11px] text-gray-500 italic">*Nilai konversi sistem secara otomatis diatur secara terpusat oleh Admin.</p>
                 </div>
 
-                <!-- PANEL KONVERSI ADMIN (KHUSUS ADMIN) -->
+                <!-- PANEL KONVERSI ADMIN (SINKRON KE SELURUH OUTLET) -->
                 <div id="adminConversionPanel" class="space-y-3">
                     <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
                         <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2"><i class="fa-solid fa-sliders text-blue-600 mr-1"></i> Parameter Konversi & Nilai Dasar (Admin)</h3>
@@ -354,7 +347,7 @@
                         </div>
 
                         <button onclick="simpanKonfigurasi()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition mt-2">
-                            Simpan Pengaturan Konversi
+                            Simpan & Sinkronkan Pengaturan Ke Semua Outlet
                         </button>
                     </div>
 
@@ -466,32 +459,15 @@
                 <i class="fa-solid fa-clipboard-list text-base mb-0.5"></i>
                 <span class="text-[9px] font-medium">Aktivitas</span>
             </button>
-            <button onclick="switchTab('TutupBuku')" id="navTabTutupBuku" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
-                <i class="fa-solid fa-book-bookmark text-base mb-0.5"></i>
-                <span class="text-[9px] font-medium">Tutup Buku</span>
+            <button onclick="switchTab('Rekap')" id="navTabRekap" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
+                <i class="fa-solid fa-file-lines text-base mb-0.5"></i>
+                <span class="text-[9px] font-medium">Rekap</span>
             </button>
             <button onclick="switchTab('Pengaturan')" id="navTabPengaturan" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
                 <i class="fa-solid fa-gear text-base mb-0.5"></i>
                 <span class="text-[9px] font-medium">Pengaturan</span>
             </button>
         </nav>
-
-        <!-- MODAL DETAIL TUTUP BUKU -->
-        <div id="modalDetailTutupBuku" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                <div class="bg-emerald-600 text-white p-4 flex justify-between items-center">
-                    <h3 class="font-bold text-sm" id="modalPeriodeTitle">Detail Tutup Buku</h3>
-                    <button onclick="tutupModalDetail()" class="text-white hover:bg-emerald-700 p-1.5 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
-                </div>
-                <div class="p-4 overflow-y-auto space-y-2 text-xs" id="modalDetailContent"></div>
-                <div class="p-3 bg-gray-50 border-t flex space-x-2">
-                    <button id="modalDownloadTxtBtn" onclick="" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center justify-center">
-                        <i class="fa-solid fa-file-arrow-down mr-1.5"></i> Download Txt Periode Ini
-                    </button>
-                    <button onclick="tutupModalDetail()" class="bg-gray-800 text-white text-xs px-4 py-2 rounded-lg font-medium">Tutup</button>
-                </div>
-            </div>
-        </div>
 
         <!-- SLIDE DRAWER -->
         <div id="drawerOverlay" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity" onclick="toggleDrawer(false)"></div>
@@ -535,10 +511,10 @@
         let appState = {
             isAdmin: true,
             currentOutlet: 'Pusat / Admin Utama',
-            inspectingOutletId: null, // Track jika Admin sedang melakukan inspeksi/switch ke outlet tertentu
+            inspectingOutletId: null,
             inspectingOutletName: '',
             logoUrl: '',
-            rawOutletsData: {}, // Menyimpan snapshot seluruh outlet untuk admin
+            rawOutletsData: {},
             config: {
                 hargaPcs: 1200,
                 satuanKemasan: 'Terpal',
@@ -548,8 +524,7 @@
                 manualLabaBersih: 400
             },
             dataPenjualan: [],
-            dataAktivitas: [],
-            dataTutupBuku: []
+            dataAktivitas: []
         };
 
         function switchAuthTab(tab) {
@@ -657,21 +632,6 @@
                 }
             });
 
-            db.ref('tutupBuku').on('value', snap => {
-                let valTutupBuku = snap.val() || [];
-                let parsedList = Array.isArray(valTutupBuku) ? valTutupBuku : Object.values(valTutupBuku);
-                if (appState.isAdmin) {
-                    if (appState.inspectingOutletId) {
-                        appState.dataTutupBuku = parsedList.filter(item => item.outlet === appState.inspectingOutletName);
-                    } else {
-                        appState.dataTutupBuku = parsedList;
-                    }
-                } else {
-                    appState.dataTutupBuku = parsedList.filter(item => item.outlet === appState.currentOutlet);
-                }
-                renderArsipTutupBuku();
-            });
-
             if (appState.isAdmin) {
                 db.ref('outlets').on('value', outletSnap => {
                     appState.rawOutletsData = outletSnap.val() || {};
@@ -696,18 +656,15 @@
             }
         }
 
-        // Memproses data tampilan Admin (Gabungan Seluruh Outlet ATAU Spesifik 1 Outlet saat Di-switch)
         function processAdminDataView() {
             if (!appState.isAdmin) return;
 
             if (appState.inspectingOutletId) {
-                // TAMPILAN SPESIFIK INDIVIDUAL OUTLET (MODE MONITORING)
                 let outletData = appState.rawOutletsData[appState.inspectingOutletId] || {};
                 appState.dataPenjualan = outletData.penjualan ? (Array.isArray(outletData.penjualan) ? outletData.penjualan : Object.values(outletData.penjualan)) : [];
                 appState.dataAktivitas = outletData.aktivitas ? (Array.isArray(outletData.aktivitas) ? outletData.aktivitas : Object.values(outletData.aktivitas)) : [];
                 appState.config.stokDelta = outletData.stokDelta || 0;
             } else {
-                // TAMPILAN GABUNGAN AKUMULASI (ADMIN PUSAT)
                 let combinedPenjualan = [];
                 let combinedAktivitas = [];
 
@@ -732,13 +689,12 @@
         }
 
         function updateUIConfigFields() {
-            if (!appState.isAdmin) {
-                document.getElementById('cfgHargaPcs').value = appState.config.hargaPcs || 1200;
-                document.getElementById('cfgSatuanKemasan').value = appState.config.satuanKemasan || 'Terpal';
-                document.getElementById('cfgIsiPerSatuan').value = appState.config.isiPerSatuan || 50;
-                document.getElementById('cfgManualLabaBarang').value = appState.config.manualLabaBarang || 500;
-                document.getElementById('cfgManualLabaBersih').value = appState.config.manualLabaBersih || 400;
-            }
+            document.getElementById('cfgHargaPcs').value = appState.config.hargaPcs || 1200;
+            document.getElementById('cfgSatuanKemasan').value = appState.config.satuanKemasan || 'Terpal';
+            document.getElementById('cfgIsiPerSatuan').value = appState.config.isiPerSatuan || 50;
+            document.getElementById('cfgManualLabaBarang').value = appState.config.manualLabaBarang || 500;
+            document.getElementById('cfgManualLabaBersih').value = appState.config.manualLabaBersih || 400;
+
             const lbl = document.getElementById('labelSatuanBawa');
             if (lbl) lbl.innerText = `Jumlah ${appState.config.satuanKemasan || 'Terpal'}`;
         }
@@ -746,7 +702,6 @@
         function saveDataToDB() {
             if (appState.isAdmin) {
                 if (appState.inspectingOutletId) {
-                    // Jika sedang memantau outlet, simpan stokDelta ke outlet yang bersangkutan
                     db.ref(`outlets/${appState.inspectingOutletId}`).update({
                         stokDelta: appState.config.stokDelta
                     });
@@ -799,7 +754,6 @@
             }
         }
 
-        // --- FITUR MAINTENANCE ---
         function bukaMenuMaintenance() {
             let pwd = prompt("Masukkan Sandi Maintenance:");
             if (pwd === SECRET_MAINTENANCE_PASS) {
@@ -896,82 +850,11 @@
             reader.readAsText(file);
         }
 
-        // --- FITUR DOWNLOAD LAPORAN TXT PER CARD TUTUP BUKU ---
         function formatKonversiKemasan(pcs) {
             const isi = appState.config.isiPerSatuan || 50;
             const satuan = appState.config.satuanKemasan || 'Terpal';
             const jumlahKemasan = (pcs / isi).toFixed(1);
-            return `${pcs}Pcs (${jumlahKemasan} ${satuan})`;
-        }
-
-        function downloadArsipTxt(arsipId) {
-            let arsip = appState.dataTutupBuku.find(item => item.id === arsipId);
-            if (!arsip) {
-                alert("Data arsip tutup buku tidak ditemukan!");
-                return;
-            }
-
-            let textReport = "=== LAPORAN REKAPITULASI TUTUP BUKU CRS ===\n";
-            textReport += `Periode : ${arsip.tglMulai} s.d ${arsip.tglAkhir}\n`;
-            textReport += `Outlet  : ${arsip.outlet || 'Pusat'}\n`;
-            textReport += `Waktu Eksekusi: ${arsip.waktuEksekusi}\n\n`;
-
-            textReport += `----------------------------------------\n`;
-            textReport += `Nama Outlet: ${arsip.outlet || 'Pusat'}\n`;
-            textReport += `----------------------------------------\n\n`;
-
-            textReport += `Penjualan sales\n`;
-            let pList = arsip.salesList || [];
-            if (pList.length === 0) {
-                textReport += `- Belum ada data penjualan pada periode ini\n`;
-            } else {
-                let salesMap = {};
-                pList.forEach(p => {
-                    let sName = p.sales || 'Tanpa Nama';
-                    salesMap[sName] = (salesMap[sName] || 0) + (p.terjual || 0);
-                });
-                Object.keys(salesMap).forEach(sName => {
-                    textReport += `Nama : ${sName}\n`;
-                    textReport += `Terjual : ${salesMap[sName]} Pcs\n`;
-                });
-            }
-            textReport += `\n`;
-
-            textReport += `Pengeluaran outlet\n`;
-            let aList = arsip.aktivitasList || [];
-            let totalPengeluaranLabaBersih = 0;
-            let totalPengeluaranLabaBarang = 0;
-            let countWrPlus = 0, pcsWrPlus = 0;
-            let countWrX = 0, pcsWrX = 0;
-            let countWrMin = 0;
-
-            aList.forEach(a => {
-                if (a.tipe === 'pengeluaran') {
-                    if (a.sumber === 'laba_bersih') totalPengeluaranLabaBersih += (a.nominal || 0);
-                    else totalPengeluaranLabaBarang += (a.nominal || 0);
-                } else if (a.tipe === 'stok_keluar') {
-                    if (a.subTipe === 'wr+') { countWrPlus++; pcsWrPlus += (a.pcs || 0); }
-                    else if (a.subTipe === 'wr×') { countWrX++; pcsWrX += (a.pcs || 0); }
-                    else if (a.subTipe === 'wr-') { countWrMin++; }
-                }
-            });
-
-            textReport += `Laba bersih: Rp ${totalPengeluaranLabaBersih.toLocaleString('id-ID')}\n`;
-            textReport += `Laba barang : Rp ${totalPengeluaranLabaBarang.toLocaleString('id-ID')}\n\n`;
-
-            textReport += `Warung\n`;
-            textReport += `Wr+ : ${formatKonversiKemasan(pcsWrPlus)}\n`;
-            textReport += `Wr× : ${formatKonversiKemasan(pcsWrX)}\n`;
-            textReport += `Wr- : ${countWrMin} warung\n\n`;
-
-            let blob = new Blob([textReport], { type: 'text/plain;charset=utf-8' });
-            let url = URL.createObjectURL(blob);
-            let anchor = document.createElement('a');
-            anchor.href = url;
-            anchor.download = `Laporan_TutupBuku_${arsip.tglMulai}_${arsip.tglAkhir}.txt`;
-            document.body.appendChild(anchor);
-            anchor.click();
-            anchor.remove();
+            return `${pcs} Pcs (${jumlahKemasan} ${satuan})`;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -979,15 +862,13 @@
             document.getElementById('pTgl').value = today;
             document.getElementById('exTgl').value = today;
             document.getElementById('skTgl').value = today;
-            document.getElementById('tbTglMulai').value = today;
-            document.getElementById('tbTglAkhir').value = today;
             
             const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
             document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('id-ID', options);
         });
 
         function switchTab(tabName) {
-            ['Dashboard', 'Penjualan', 'Aktivitas', 'TutupBuku', 'Pengaturan'].forEach(t => {
+            ['Dashboard', 'Penjualan', 'Aktivitas', 'Rekap', 'Pengaturan'].forEach(t => {
                 const el = document.getElementById('tab' + t);
                 if(el) el.classList.add('hidden');
                 const navBtn = document.getElementById('navTab' + t);
@@ -1003,6 +884,10 @@
             if(activeNav) {
                 activeNav.classList.remove('text-gray-400');
                 activeNav.classList.add('text-blue-600');
+            }
+
+            if(tabName === 'Rekap') {
+                generateRekapFormat();
             }
         }
 
@@ -1056,12 +941,10 @@
             });
         }
 
-        // FUNGSI UTAMA: MENAMPILKAN DATA OUTLET YANG DIPILIH KEPADA DASHBOARD ADMIN
         function bukaDashboardOutletSpesifik(outletUid, outletName) {
             appState.inspectingOutletId = outletUid;
             appState.inspectingOutletName = outletName;
 
-            // UI Header & Notification updates
             document.getElementById('headerOutletName').innerText = `${outletName} (Monitoring)`;
             document.getElementById('inspectOutletNameDisplay').innerText = outletName;
             document.getElementById('dashTitleText').innerText = `Kinerja: ${outletName}`;
@@ -1072,7 +955,6 @@
             switchTab('Dashboard');
         }
 
-        // KELUAR DARI MODE PEMANTAUAN UNTUK KEMBALI KE AKUN ADMIN UTAMA (AKUMULASI GABUNGAN)
         function keluarModeInspect() {
             appState.inspectingOutletId = null;
             appState.inspectingOutletName = '';
@@ -1093,8 +975,6 @@
             const outletStockPanel = document.getElementById('outletStockPanel');
             const adminConversionPanel = document.getElementById('adminConversionPanel');
             const adminMaintenanceSection = document.getElementById('adminMaintenanceSection');
-            const formTutupBuku = document.getElementById('formTutupBuku');
-            const tutupBukuDesc = document.getElementById('tutupBukuDesc');
             
             if (appState.isAdmin) {
                 badge.innerText = 'Mode Admin';
@@ -1105,8 +985,6 @@
                 outletStockPanel.classList.add('hidden');
                 adminConversionPanel.classList.remove('hidden');
                 adminMaintenanceSection.classList.remove('hidden');
-                if (formTutupBuku) formTutupBuku.style.display = 'block';
-                if (tutupBukuDesc) tutupBukuDesc.innerText = 'Lakukan tutup buku untuk merangkum seluruh transaksi aktif dan memulai periode baru yang bersih.';
             } else {
                 badge.innerText = 'Mode Outlet';
                 badge.className = 'text-xs bg-emerald-700 px-2 py-0.5 rounded-full font-medium';
@@ -1116,8 +994,6 @@
                 outletStockPanel.classList.remove('hidden');
                 adminConversionPanel.classList.add('hidden');
                 adminMaintenanceSection.classList.add('hidden');
-                if (formTutupBuku) formTutupBuku.style.display = 'none';
-                if (tutupBukuDesc) tutupBukuDesc.innerText = 'Berikut adalah arsip riwayat tutup buku yang dilakukan oleh Admin pusat.';
             }
             refreshDashboard();
         }
@@ -1159,18 +1035,15 @@
             }
         }
 
-        // MENGHITUNG STOK GABUNGAN UNTUK ADMIN ATAU STOK INDIVIDUAL UNTUK OUTLET/MONITORING
         function hitungStokAktifFisik() {
             let totalTerjual = 0;
             let totalStokKeluarNet = 0;
             let totalInitialStok = 0;
 
             if (appState.isAdmin && !appState.inspectingOutletId) {
-                // ITUNG AKUMULASI GABUNGAN DARI SELURUH OUTLET DI FIREBASE
                 Object.values(appState.rawOutletsData).forEach(out => {
                     totalInitialStok += (out.stokDelta || 0);
                 });
-                // Jika admin pusat punya stok delta sendiri
                 totalInitialStok += (appState.config.stokDelta || 0);
             } else {
                 totalInitialStok = appState.config.stokDelta || 0;
@@ -1206,7 +1079,7 @@
             
             document.getElementById('labelSatuanBawa').innerText = `Jumlah ${appState.config.satuanKemasan}`;
             saveDataToDB();
-            alert('Pengaturan konversi & nilai laba berhasil disinkronkan!');
+            alert('Pengaturan konversi & nilai laba berhasil disinkronkan ke seluruh outlet!');
         }
 
         function simpanIdentitasOutlet() {
@@ -1305,84 +1178,6 @@
             alert('Aktivitas stok keluar berhasil dicatat!');
         }
 
-        function handleTutupBukuSubmit(e) {
-            e.preventDefault();
-            if (!appState.isAdmin) {
-                alert("Akses ditolak: Hanya admin yang dapat melakukan tutup buku.");
-                return;
-            }
-            
-            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
-            let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
-
-            if (listPenjualan.length === 0 && listAktivitas.length === 0) {
-                alert("Tidak ada data transaksi aktif untuk ditutup bukunya!");
-                return;
-            }
-
-            let totalOmset = 0, totalTerjual = 0, totalSisa = 0, totalPcsHilang = 0, totalPengeluaran = 0;
-            
-            listPenjualan.forEach(p => {
-                totalOmset += (p.totalRp || 0);
-                totalTerjual += (p.terjual || 0);
-                totalSisa += (p.sisa || 0);
-            });
-            
-            listAktivitas.forEach(a => {
-                if (a.tipe === 'pengeluaran') totalPengeluaran += (a.nominal || 0);
-                if (a.tipe === 'stok_keluar' && a.subTipe === 'wr×') totalPcsHilang += (a.pcs || 0);
-            });
-
-            let stokAkhirPeriode = hitungStokAktifFisik();
-
-            const arsipBaru = {
-                id: Date.now(),
-                tglMulai: document.getElementById('tbTglMulai').value,
-                tglAkhir: document.getElementById('tbTglAkhir').value,
-                waktuEksekusi: new Date().toLocaleString('id-ID'),
-                totalOmset,
-                totalTerjual,
-                totalSisa,
-                labaBarang: totalTerjual * (appState.config.manualLabaBarang || 0),
-                labaBersih: (totalTerjual * (appState.config.manualLabaBersih || 0)) - totalPengeluaran,
-                totalPengeluaran,
-                kerugianHilang: totalPcsHilang * (appState.config.manualLabaBarang || 0),
-                totalPcsHilang,
-                stokSisaAkhir: stokAkhirPeriode,
-                outlet: appState.currentOutlet,
-                salesList: listPenjualan,
-                aktivitasList: listAktivitas
-            };
-
-            if (!Array.isArray(appState.dataTutupBuku)) {
-                appState.dataTutupBuku = [];
-            }
-            appState.dataTutupBuku.push(arsipBaru);
-
-            appState.config.stokDelta = 0;
-            appState.dataPenjualan = [];
-            appState.dataAktivitas = [];
-
-            db.ref('admin_config').set(appState.config);
-            db.ref('tutupBuku').set(appState.dataTutupBuku);
-
-            db.ref('outlets').once('value', snapshot => {
-                let outletsVal = snapshot.val();
-                if (outletsVal) {
-                    Object.keys(outletsVal).forEach(outletId => {
-                        db.ref(`outlets/${outletId}`).update({
-                            penjualan: [],
-                            aktivitas: [],
-                            stokDelta: 0
-                        });
-                    });
-                }
-            });
-            
-            alert(`Tutup buku berhasil! Sisa stok akhir sejumlah ${stokAkhirPeriode} Pcs telah dikunci.`);
-            switchTab('Dashboard');
-        }
-
         function renderTabelPenjualan() {
             const tbody = document.getElementById('tablePenjualanBody');
             let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
@@ -1418,11 +1213,12 @@
             container.innerHTML = '';
             listAktivitas.slice().reverse().forEach(act => {
                 let badgeColor = act.tipe === 'pengeluaran' ? 'text-red-600' : (act.subTipe === 'wr×' ? 'text-rose-600' : 'text-purple-600');
+                let sumberLabel = act.tipe === 'pengeluaran' ? ` (${act.sumber === 'laba_bersih' ? 'Potong Laba Bersih' : 'Potong Laba Barang'})` : '';
                 container.innerHTML += `
                     <div class="p-2.5 rounded-lg border text-xs bg-gray-50 flex justify-between items-center">
                         <div>
                             <span class="font-bold ${badgeColor}">[${act.tipe === 'pengeluaran' ? 'Pengeluaran' : act.subTipe}]</span> 
-                            <span class="font-semibold">${act.keterangan}</span>
+                            <span class="font-semibold">${act.keterangan}</span>${sumberLabel}
                             <div class="text-[10px] text-gray-500">${act.tgl} | Outlet: ${act.outlet || 'Pusat'}</div>
                         </div>
                         <span class="font-bold ${badgeColor}">${act.tipe === 'pengeluaran' ? '-Rp ' + (act.nominal || 0).toLocaleString('id-ID') : (act.pcs || 0) + ' Pcs'}</span>
@@ -1431,62 +1227,22 @@
             });
         }
 
-        function renderArsipTutupBuku() {
-            const container = document.getElementById('listTutupBukuContainer');
-            let listTutupBuku = Array.isArray(appState.dataTutupBuku) ? appState.dataTutupBuku : Object.values(appState.dataTutupBuku || {});
-
-            if (listTutupBuku.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Belum ada riwayat tutup buku tercatat.</p>`;
-                return;
-            }
-            container.innerHTML = '';
-            listTutupBuku.slice().reverse().forEach(arsip => {
-                let labaBersihHTML = appState.isAdmin ? ` | Laba Bersih: <span class="font-bold text-emerald-600">Rp ${(arsip.labaBersih || 0).toLocaleString('id-ID')}</span>` : '';
-                container.innerHTML += `
-                    <div onclick="bukaDetailTutupBuku(${arsip.id})" class="bg-white border border-emerald-200 rounded-xl p-3 shadow-sm hover:bg-emerald-50/50 cursor-pointer transition flex justify-between items-center">
-                        <div>
-                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Periode: ${arsip.tglMulai} s.d ${arsip.tglAkhir} (${arsip.outlet || 'Pusat'})</span>
-                            <div class="text-[11px] text-gray-600 mt-1">Omset: <span class="font-bold text-blue-600">Rp ${(arsip.totalOmset || 0).toLocaleString('id-ID')}</span>${labaBersihHTML}</div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
-                    </div>
-                `;
-            });
-        }
-
-        function bukaDetailTutupBuku(id) {
-            let listTutupBuku = Array.isArray(appState.dataTutupBuku) ? appState.dataTutupBuku : Object.values(appState.dataTutupBuku || {});
-            const arsip = listTutupBuku.find(item => item.id === id);
-            if (!arsip) return;
-            document.getElementById('modalPeriodeTitle').innerText = `Periode: ${arsip.tglMulai} - ${arsip.tglAkhir}`;
-            document.getElementById('modalDetailContent').innerHTML = `
-                <div class="bg-gray-50 p-3 rounded-xl border space-y-1.5">
-                    <p class="text-[10px] text-gray-400 font-semibold uppercase mb-1">Rangkuman Transaksi Outlet (${arsip.outlet || 'Pusat'}):</p>
-                    <div class="flex justify-between"><span>- Total Omset:</span> <span class="font-bold text-blue-600">Rp ${(arsip.totalOmset || 0).toLocaleString('id-ID')}</span></div>
-                    <div class="flex justify-between"><span>- Laba barang:</span> <span class="font-bold text-amber-600">Rp ${(arsip.labaBarang || 0).toLocaleString('id-ID')}</span></div>
-                    <div class="flex justify-between"><span>- Laba Bersih:</span> <span class="font-bold text-emerald-600">Rp ${(arsip.labaBersih || 0).toLocaleString('id-ID')}</span></div>
-                    <div class="flex justify-between"><span>- Total Pengeluaran:</span> <span class="font-bold text-red-600">Rp ${(arsip.totalPengeluaran || 0).toLocaleString('id-ID')}</span></div>
-                    <div class="flex justify-between"><span>- Kerugian Barang Hilang (wr×):</span> <span class="font-bold text-rose-600">Rp ${(arsip.kerugianHilang || 0).toLocaleString('id-ID')}</span></div>
-                    <div class="flex justify-between"><span>- Terjual:</span> <span class="font-bold text-teal-600">${arsip.totalTerjual || 0} Pcs</span></div>
-                    <div class="flex justify-between border-t pt-1.5 mt-1.5 font-semibold text-purple-700"><span>- Stok Sisa Akhir:</span> <span>${arsip.stokSisaAkhir || 0} Pcs</span></div>
-                </div>
-            `;
-            document.getElementById('modalDownloadTxtBtn').setAttribute('onclick', `downloadArsipTxt(${arsip.id})`);
-            document.getElementById('modalDetailTutupBuku').classList.remove('hidden');
-        }
-
-        function tutupModalDetail() {
-            document.getElementById('modalDetailTutupBuku').classList.add('hidden');
-        }
-
         function refreshDashboard() {
-            let totalOmset = 0, totalTerjual = 0, totalPcsHilang = 0, totalPengeluaranOp = 0;
+            let totalOmset = 0, totalTerjual = 0, totalPcsHilang = 0;
+            let totalPengeluaranLabaBersih = 0, totalPengeluaranLabaBarang = 0;
+
             let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
             let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
 
             listPenjualan.forEach(p => { totalOmset += (p.totalRp || 0); totalTerjual += (p.terjual || 0); });
             listAktivitas.forEach(a => {
-                if (a.tipe === 'pengeluaran') totalPengeluaranOp += (a.nominal || 0);
+                if (a.tipe === 'pengeluaran') {
+                    if (a.sumber === 'laba_bersih') {
+                        totalPengeluaranLabaBersih += (a.nominal || 0);
+                    } else {
+                        totalPengeluaranLabaBarang += (a.nominal || 0);
+                    }
+                }
                 if (a.tipe === 'stok_keluar') {
                     if (a.subTipe === 'wr×') totalPcsHilang += (a.pcs || 0);
                 }
@@ -1495,8 +1251,8 @@
             const manualLabaBrg = appState.config.manualLabaBarang || 0;
             const manualLabaBrs = appState.config.manualLabaBersih || 0;
 
-            const labaBarangKotor = totalTerjual * manualLabaBrg;
-            const labaBersih = (totalTerjual * manualLabaBrs) - totalPengeluaranOp;
+            const labaBarangKotor = Math.max(0, (totalTerjual * manualLabaBrg) - totalPengeluaranLabaBarang);
+            const labaBersih = Math.max(0, (totalTerjual * manualLabaBrs) - totalPengeluaranLabaBersih);
             const nominalKerugianHilang = totalPcsHilang * manualLabaBrg;
             const stokAkhir = hitungStokAktifFisik();
 
@@ -1511,6 +1267,81 @@
             const outletDisplay = document.getElementById('outletDisplayStok');
             if (outletDisplay) outletDisplay.innerText = `${stokAkhir} Pcs`;
         }
+
+        function generateRekapFormat() {
+            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
+
+            let totalOmset = 0, totalTerjual = 0, totalPcsHilang = 0;
+            let totalPengeluaranLabaBersih = 0, totalPengeluaranLabaBarang = 0;
+            let countWrPlus = 0, pcsWrPlus = 0;
+            let countWrX = 0, pcsWrX = 0;
+            let countWrMin = 0;
+
+            listPenjualan.forEach(p => {
+                totalOmset += (p.totalRp || 0);
+                totalTerjual += (p.terjual || 0);
+            });
+
+            listAktivitas.forEach(a => {
+                if (a.tipe === 'pengeluaran') {
+                    if (a.sumber === 'laba_bersih') totalPengeluaranLabaBersih += (a.nominal || 0);
+                    else totalPengeluaranLabaBarang += (a.nominal || 0);
+                } else if (a.tipe === 'stok_keluar') {
+                    if (a.subTipe === 'wr+') { countWrPlus++; pcsWrPlus += (a.pcs || 0); }
+                    else if (a.subTipe === 'wr×') { countWrX++; pcsWrX += (a.pcs || 0); totalPcsHilang += (a.pcs || 0); }
+                    else if (a.subTipe === 'wr-') { countWrMin++; }
+                }
+            });
+
+            const manualLabaBrg = appState.config.manualLabaBarang || 0;
+            const manualLabaBrs = appState.config.manualLabaBersih || 0;
+            const labaBarangKotor = (totalTerjual * manualLabaBrg) - totalPengeluaranLabaBarang;
+            const labaBersih = (totalTerjual * manualLabaBrs) - totalPengeluaranLabaBersih;
+            const stokAkhir = hitungStokAktifFisik();
+
+            let formatStr = `=== REKAPITULASI KINERJA RETAIL CRS ===\n`;
+            formatStr += `Outlet / Cabang : ${appState.currentOutlet}\n`;
+            formatStr += `Tanggal Cetak   : ${new Date().toLocaleString('id-ID')}\n`;
+            formatStr += `----------------------------------------\n\n`;
+
+            formatStr += `1. KEUANGAN & KINERJA\n`;
+            formatStr += `   - Total Omset       : Rp ${totalOmset.toLocaleString('id-ID')}\n`;
+            formatStr += `   - Laba Barang       : Rp ${labaBarangKotor.toLocaleString('id-ID')}\n`;
+            formatStr += `   - Laba Bersih       : Rp ${labaBersih.toLocaleString('id-ID')}\n`;
+            formatStr += `   - Total Pengeluaran : Rp ${(totalPengeluaranLabaBersih + totalPengeluaranLabaBarang).toLocaleString('id-ID')}\n\n`;
+
+            formatStr += `2. STOK & PENJUALAN\n`;
+            formatStr += `   - Barang Terjual    : ${totalTerjual} Pcs\n`;
+            formatStr += `   - Stok Gudang Sisa  : ${stokAkhir} Pcs\n\n`;
+
+            formatStr += `3. AKTIVITAS WARUNG (WR)\n`;
+            formatStr += `   - Wr+ (Tambah)      : ${formatKonversiKemasan(pcsWrPlus)}\n`;
+            formatStr += `   - Wr× (Hilang)      : ${formatKonversiKemasan(pcsWrX)}\n`;
+            formatStr += `   - Wr- (Retur/Stop)  : ${countWrMin} Warung\n`;
+
+            document.getElementById('rekapTextArea').value = formatStr;
+        }
+
+        function copyRekapText() {
+            const textarea = document.getElementById('rekapTextArea');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Teks rekap berhasil disalin!');
+        }
+
+        function downloadRekapTxt() {
+            const textContent = document.getElementById('rekapTextArea').value;
+            let blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+            let url = URL.createObjectURL(blob);
+            let anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = `Rekap_CRS_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+        }
     </script>
 </body>
 </html>
+```
