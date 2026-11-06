@@ -526,6 +526,7 @@
 
         let currentUser = null;
         const SECRET_MAINTENANCE_PASS = "531208";
+        let lastPenjualanCount = -1;
 
         let appState = {
             isAdmin: true,
@@ -545,6 +546,35 @@
             dataPenjualan: [],
             dataAktivitas: []
         };
+
+        // FUNGSI MEMUTAR NADA KHAS UANG MASUK (CHA-CHING SOUND)
+        function playCashSound() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const audioCtx = new AudioContext();
+                
+                const playTone = (freq, startTime, duration) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime + startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + startTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + startTime);
+                    osc.stop(audioCtx.currentTime + startTime + duration);
+                };
+
+                // Suara dentingan koin khas uang masuk (B5 -> E6 -> C7)
+                playTone(987.77, 0, 0.15);
+                playTone(1318.51, 0.1, 0.25);
+                playTone(2093.00, 0.2, 0.4);
+            } catch (e) {
+                console.log("Web Audio diblokir atau belum diizinkan pengguna:", e);
+            }
+        }
 
         function switchAuthTab(tab) {
             const isLogin = tab === 'login';
@@ -657,13 +687,22 @@
                 db.ref(`outlets/${currentUser.uid}`).on('value', outletSnap => {
                     const outVal = outletSnap.val();
                     if (outVal) {
-                        appState.dataPenjualan = outVal.penjualan || [];
-                        appState.dataAktivitas = outVal.aktivitas || [];
+                        let newPenjualan = outVal.penjualan ? (Array.isArray(outVal.penjualan) ? outVal.penjualan : Object.values(outVal.penjualan)) : [];
+                        
+                        // Cek jika omset bertambah dari transaksi baru di database
+                        if (lastPenjualanCount !== -1 && newPenjualan.length > lastPenjualanCount) {
+                            playCashSound();
+                        }
+                        lastPenjualanCount = newPenjualan.length;
+
+                        appState.dataPenjualan = newPenjualan;
+                        appState.dataAktivitas = outVal.aktivitas ? (Array.isArray(outVal.aktivitas) ? outVal.aktivitas : Object.values(outVal.aktivitas)) : [];
                         if (outVal.stokDelta !== undefined) appState.config.stokDelta = outVal.stokDelta;
                     } else {
                         appState.dataPenjualan = [];
                         appState.dataAktivitas = [];
                         appState.config.stokDelta = 0;
+                        lastPenjualanCount = 0;
                     }
                     renderTabelPenjualan();
                     renderAktivitas();
@@ -677,7 +716,14 @@
 
             if (appState.inspectingOutletId) {
                 let outletData = appState.rawOutletsData[appState.inspectingOutletId] || {};
-                appState.dataPenjualan = outletData.penjualan ? (Array.isArray(outletData.penjualan) ? outletData.penjualan : Object.values(outletData.penjualan)) : [];
+                let newPenjualan = outletData.penjualan ? (Array.isArray(outletData.penjualan) ? outletData.penjualan : Object.values(outletData.penjualan)) : [];
+                
+                if (lastPenjualanCount !== -1 && newPenjualan.length > lastPenjualanCount) {
+                    playCashSound();
+                }
+                lastPenjualanCount = newPenjualan.length;
+
+                appState.dataPenjualan = newPenjualan;
                 appState.dataAktivitas = outletData.aktivitas ? (Array.isArray(outletData.aktivitas) ? outletData.aktivitas : Object.values(outletData.aktivitas)) : [];
                 appState.config.stokDelta = outletData.stokDelta || 0;
             } else {
@@ -694,6 +740,11 @@
                         combinedAktivitas = combinedAktivitas.concat(aList);
                     }
                 });
+
+                if (lastPenjualanCount !== -1 && combinedPenjualan.length > lastPenjualanCount) {
+                    playCashSound();
+                }
+                lastPenjualanCount = combinedPenjualan.length;
 
                 appState.dataPenjualan = combinedPenjualan;
                 appState.dataAktivitas = combinedAktivitas;
@@ -719,6 +770,8 @@
             if (appState.isAdmin) {
                 if (appState.inspectingOutletId) {
                     db.ref(`outlets/${appState.inspectingOutletId}`).update({
+                        penjualan: appState.dataPenjualan || [],
+                        aktivitas: appState.dataAktivitas || [],
                         stokDelta: appState.config.stokDelta
                     });
                 } else {
@@ -1135,6 +1188,10 @@
             document.getElementById('formPenjualan').reset();
             document.getElementById('previewKonversiBawa').innerText = 'Setara: 0 Pcs';
             saveDataToDB();
+            
+            // Pemicu Suara Uang Masuk Saat Penjualan Berhasil Disimpan
+            playCashSound();
+            
             alert('Data penjualan berhasil disimpan secara real-time!');
         }
 
