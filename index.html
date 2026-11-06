@@ -29,7 +29,6 @@
     <div id="authScreen" class="w-full min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
             <div class="text-center mb-6">
-                <!-- Logo Arna Toys -->
                 <div class="w-24 h-24 mx-auto mb-3 relative flex items-center justify-center">
                     <img src="148979.png" alt="Arna Toys Logo" class="w-full h-full object-contain rounded-2xl drop-shadow-md">
                 </div>
@@ -77,7 +76,7 @@
         </div>
     </div>
 
-    <!-- MAIN APP SCREEN (Responsif Desktop & Tablet) -->
+    <!-- MAIN APP SCREEN -->
     <div id="appScreen" class="w-full max-w-4xl mx-auto bg-white min-h-screen shadow-lg relative flex flex-col hidden my-0 md:my-4 md:rounded-2xl md:min-h-[92vh] md:overflow-hidden">
 
         <!-- HEADER -->
@@ -120,7 +119,6 @@
                     <span class="text-xs text-gray-500 bg-gray-200 px-2.5 py-1 rounded-full font-medium" id="currentDateDisplay">-</span>
                 </div>
 
-                <!-- Grid Kartu Statistik Responsif (2 Kolom HP, 3 Kolom Tablet/PC) -->
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                     <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 p-3.5 md:p-5 rounded-xl shadow-sm">
                         <span class="text-xs font-semibold text-blue-600 uppercase tracking-wide">Omset</span>
@@ -466,7 +464,7 @@
 
         </main>
 
-        <!-- BOTTOM NAVIGATION BAR (Tetap Rapi di Ponsel mau pun Tablet/PC) -->
+        <!-- BOTTOM NAVIGATION BAR -->
         <nav class="bg-white border-t border-gray-200 absolute bottom-0 inset-x-0 w-full grid grid-cols-5 py-2 px-1 z-20 shadow-lg md:rounded-b-2xl">
             <button onclick="switchTab('Dashboard')" id="navTabDashboard" class="flex flex-col items-center justify-center text-blue-600 py-1 transition">
                 <i class="fa-solid fa-chart-pie text-base mb-0.5"></i>
@@ -509,7 +507,7 @@
 
     </div>
 
-    <!-- FIREBASE INITIALIZATION & SCRIPT -->
+    <!-- FIREBASE INITIALIZATION & SCRIPT TEROPTIMASI -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyD7YYO9OMRQ9aKBWDvfhsuOPkGg5WL2C8c",
@@ -549,17 +547,11 @@
         };
 
         function switchAuthTab(tab) {
-            if (tab === 'login') {
-                document.getElementById('formLogin').classList.remove('hidden');
-                document.getElementById('formRegister').classList.add('hidden');
-                document.getElementById('tabLoginBtn').className = 'flex-1 py-2.5 text-blue-600 border-b-2 border-blue-600';
-                document.getElementById('tabRegisterBtn').className = 'flex-1 py-2.5 text-gray-400';
-            } else {
-                document.getElementById('formLogin').classList.add('hidden');
-                document.getElementById('formRegister').classList.remove('hidden');
-                document.getElementById('tabRegisterBtn').className = 'flex-1 py-2.5 text-emerald-600 border-b-2 border-emerald-600';
-                document.getElementById('tabLoginBtn').className = 'flex-1 py-2.5 text-gray-400';
-            }
+            const isLogin = tab === 'login';
+            document.getElementById('formLogin').classList.toggle('hidden', !isLogin);
+            document.getElementById('formRegister').classList.toggle('hidden', isLogin);
+            document.getElementById('tabLoginBtn').className = isLogin ? 'flex-1 py-2.5 text-blue-600 border-b-2 border-blue-600' : 'flex-1 py-2.5 text-gray-400';
+            document.getElementById('tabRegisterBtn').className = !isLogin ? 'flex-1 py-2.5 text-emerald-600 border-b-2 border-emerald-600' : 'flex-1 py-2.5 text-gray-400';
         }
 
         function handleLogin(e) {
@@ -605,6 +597,7 @@
         });
 
         function initRealtimeSync(uid) {
+            // Menggunakan .on tunggal untuk meminimalisasi event listener berulang
             db.ref('users/' + uid).on('value', snapshot => {
                 const profile = snapshot.val();
                 if (profile) {
@@ -633,6 +626,7 @@
         }
 
         function syncDataFromDB() {
+            db.ref('admin_config').off(); // Membersihkan listener lama untuk mencegah penumpukan
             db.ref('admin_config').on('value', snap => {
                 if (snap.exists()) {
                     let cfg = snap.val();
@@ -654,11 +648,13 @@
             });
 
             if (appState.isAdmin) {
+                db.ref('outlets').off();
                 db.ref('outlets').on('value', outletSnap => {
                     appState.rawOutletsData = outletSnap.val() || {};
                     processAdminDataView();
                 });
             } else {
+                db.ref(`outlets/${currentUser.uid}`).off();
                 db.ref(`outlets/${currentUser.uid}`).on('value', outletSnap => {
                     const outVal = outletSnap.val();
                     if (outVal) {
@@ -737,8 +733,7 @@
                     });
                 }
             } else {
-                let dataPath = `outlets/${currentUser.uid}`;
-                db.ref(dataPath).set({
+                db.ref(`outlets/${currentUser.uid}`).set({
                     penjualan: appState.dataPenjualan || [],
                     aktivitas: appState.dataAktivitas || [],
                     stokDelta: appState.config.stokDelta || 0
@@ -792,24 +787,16 @@
 
         function hapusAkunDanDataFirebase() {
             if (!currentUser) return;
-            let confirmMsg = confirm("PERINGATAN KRITIS: Akun dan seluruh data Anda di Firebase akan dihapus secara permanen. Lanjutkan?");
-            if (!confirmMsg) return;
+            if (!confirm("PERINGATAN KRITIS: Akun dan seluruh data Anda di Firebase akan dihapus secara permanen. Lanjutkan?")) return;
 
             let uid = currentUser.uid;
-            let promises = [
+            Promise.all([
                 db.ref('users/' + uid).remove(),
                 db.ref('outlets/' + uid).remove()
-            ];
-
-            Promise.all(promises).then(() => {
-                currentUser.delete().then(() => {
-                    alert("Akun dan data berhasil dihapus permanen.");
-                }).catch(err => {
-                    alert("Gagal menghapus akun Auth: " + err.message + "\n(Mungkin Anda perlu login ulang terlebih dahulu).");
-                });
-            }).catch(err => {
-                alert("Gagal menghapus data database: " + err.message);
-            });
+            ]).then(() => {
+                currentUser.delete().then(() => alert("Akun dan data berhasil dihapus permanen."))
+                .catch(err => alert("Gagal menghapus akun Auth: " + err.message));
+            }).catch(err => alert("Gagal menghapus data database: " + err.message));
         }
 
         function bersihkanSampahDatabase() {
@@ -830,7 +817,6 @@
                             countRemoved++;
                         }
                     });
-
                     alert(`Pembersihan selesai! Berhasil menghapus ${countRemoved} data dari akun yang tidak terdaftar.`);
                 });
             });
@@ -838,8 +824,7 @@
 
         function backupDatabaseJson() {
             db.ref().once('value', snapshot => {
-                let data = snapshot.val();
-                let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+                let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(snapshot.val(), null, 2));
                 let downloadAnchor = document.createElement('a');
                 downloadAnchor.setAttribute("href", dataStr);
                 downloadAnchor.setAttribute("download", `ArnaToys_Backup_${new Date().toISOString().split('T')[0]}.json`);
@@ -858,11 +843,8 @@
                 try {
                     let jsonData = JSON.parse(e.target.result);
                     if (confirm("PERINGATAN: Memulihkan database akan menimpa seluruh data saat ini dengan data dari file cadangan. Lanjutkan?")) {
-                        db.ref().set(jsonData).then(() => {
-                            alert("Pemulihan data (Restore) berhasil dilakukan!");
-                        }).catch(err => {
-                            alert("Gagal memulihkan data: " + err.message);
-                        });
+                        db.ref().set(jsonData).then(() => alert("Pemulihan data (Restore) berhasil dilakukan!"))
+                        .catch(err => alert("Gagal memulihkan data: " + err.message));
                     }
                 } catch (err) {
                     alert("Format file JSON tidak valid!");
@@ -874,8 +856,7 @@
         function formatKonversiKemasan(pcs) {
             const isi = appState.config.isiPerSatuan || 50;
             const satuan = appState.config.satuanKemasan || 'Terpal';
-            const jumlahKemasan = (pcs / isi).toFixed(1);
-            return `${pcs} Pcs (${jumlahKemasan} ${satuan})`;
+            return `${pcs} Pcs (${(pcs / isi).toFixed(1)} ${satuan})`;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -884,32 +865,27 @@
             document.getElementById('exTgl').value = today;
             document.getElementById('skTgl').value = today;
             
-            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
-            document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('id-ID', options);
+            document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
         });
 
         function switchTab(tabName) {
             ['Dashboard', 'Penjualan', 'Aktivitas', 'Rekap', 'Pengaturan'].forEach(t => {
-                const el = document.getElementById('tab' + t);
-                if(el) el.classList.add('hidden');
+                document.getElementById('tab' + t)?.classList.add('hidden');
                 const navBtn = document.getElementById('navTab' + t);
-                if(navBtn) {
+                if (navBtn) {
                     navBtn.classList.remove('text-blue-600');
                     navBtn.classList.add('text-gray-400');
                 }
             });
             
-            const targetTab = document.getElementById('tab' + tabName);
-            if(targetTab) targetTab.classList.remove('hidden');
+            document.getElementById('tab' + tabName)?.classList.remove('hidden');
             const activeNav = document.getElementById('navTab' + tabName);
-            if(activeNav) {
+            if (activeNav) {
                 activeNav.classList.remove('text-gray-400');
                 activeNav.classList.add('text-blue-600');
             }
 
-            if(tabName === 'Rekap') {
-                generateRekapFormat();
-            }
+            if (tabName === 'Rekap') generateRekapFormat();
         }
 
         function toggleDrawer(isOpen) {
@@ -937,14 +913,14 @@
                     return;
                 }
                 
-                listEl.innerHTML = `<p class="text-xs font-bold text-gray-700 mb-2">Outlet Terdaftar (Klik Mata Untuk Filter):</p>`;
+                let htmlStr = `<p class="text-xs font-bold text-gray-700 mb-2">Outlet Terdaftar (Klik Mata Untuk Filter):</p>`;
                 
                 Object.keys(usersVal).forEach(uid => {
                     let uData = usersVal[uid];
                     if (!uData.isAdmin) {
                         let namaOutlet = uData.outletName || `Outlet (${uid.substring(0,6)}...)`;
                         let isCurrentInspected = appState.inspectingOutletId === uid;
-                        listEl.innerHTML += `
+                        htmlStr += `
                             <div class="p-2.5 border rounded-xl ${isCurrentInspected ? 'bg-amber-50 border-amber-300' : 'bg-gray-50'} flex justify-between items-center mb-2">
                                 <div>
                                     <h4 class="font-bold text-xs text-gray-800">${namaOutlet}</h4>
@@ -959,6 +935,7 @@
                         `;
                     }
                 });
+                listEl.innerHTML = htmlStr;
             });
         }
 
@@ -1115,8 +1092,7 @@
         }
 
         function verifikasiKodeAdmin() {
-            const kode = document.getElementById('inputAdminCode').value;
-            if (kode === '12345') {
+            if (document.getElementById('inputAdminCode').value === '12345') {
                 appState.isAdmin = true;
                 db.ref('users/' + currentUser.uid).update({ isAdmin: true });
                 applyRoleUI();
@@ -1207,9 +1183,10 @@
                 tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400 italic">Belum ada data penjualan</td></tr>`;
                 return;
             }
-            tbody.innerHTML = '';
+            
+            let htmlStr = '';
             listPenjualan.forEach((item, index) => {
-                tbody.innerHTML += `
+                htmlStr += `
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-2.5 font-medium">${index + 1}</td>
                         <td class="p-2.5">${item.tgl}</td>
@@ -1221,6 +1198,7 @@
                     </tr>
                 `;
             });
+            tbody.innerHTML = htmlStr;
         }
 
         function renderAktivitas() {
@@ -1231,11 +1209,12 @@
                 container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Belum ada riwayat aktivitas.</p>`;
                 return;
             }
-            container.innerHTML = '';
+
+            let htmlStr = '';
             listAktivitas.slice().reverse().forEach(act => {
                 let badgeColor = act.tipe === 'pengeluaran' ? 'text-red-600' : (act.subTipe === 'wr×' ? 'text-rose-600' : 'text-purple-600');
                 let sumberLabel = act.tipe === 'pengeluaran' ? ` (${act.sumber === 'laba_bersih' ? 'Potong Laba Bersih' : 'Potong Laba Barang'})` : '';
-                container.innerHTML += `
+                htmlStr += `
                     <div class="p-2.5 rounded-lg border text-xs bg-gray-50 flex justify-between items-center">
                         <div>
                             <span class="font-bold ${badgeColor}">[${act.tipe === 'pengeluaran' ? 'Pengeluaran' : act.subTipe}]</span> 
@@ -1246,6 +1225,7 @@
                     </div>
                 `;
             });
+            container.innerHTML = htmlStr;
         }
 
         function refreshDashboard() {
@@ -1264,8 +1244,8 @@
                         totalPengeluaranLabaBarang += (a.nominal || 0);
                     }
                 }
-                if (a.tipe === 'stok_keluar') {
-                    if (a.subTipe === 'wr×') totalPcsHilang += (a.pcs || 0);
+                if (a.tipe === 'stok_keluar' && a.subTipe === 'wr×') {
+                    totalPcsHilang += (a.pcs || 0);
                 }
             });
 
@@ -1293,7 +1273,7 @@
             let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
             let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
 
-            let totalOmset = 0, totalTerjual = 0, totalPcsHilang = 0;
+            let totalOmset = 0, totalTerjual = 0;
             let totalPengeluaranLabaBersih = 0, totalPengeluaranLabaBarang = 0;
             let countWrPlus = 0, pcsWrPlus = 0;
             let countWrX = 0, pcsWrX = 0;
@@ -1310,7 +1290,7 @@
                     else totalPengeluaranLabaBarang += (a.nominal || 0);
                 } else if (a.tipe === 'stok_keluar') {
                     if (a.subTipe === 'wr+') { countWrPlus++; pcsWrPlus += (a.pcs || 0); }
-                    else if (a.subTipe === 'wr×') { countWrX++; pcsWrX += (a.pcs || 0); totalPcsHilang += (a.pcs || 0); }
+                    else if (a.subTipe === 'wr×') { countWrX++; pcsWrX += (a.pcs || 0); }
                     else if (a.subTipe === 'wr-') { countWrMin++; }
                 }
             });
@@ -1345,10 +1325,15 @@
         }
 
         function copyRekapText() {
-            const textarea = document.getElementById('rekapTextArea');
-            textarea.select();
-            document.execCommand('copy');
-            alert('Teks rekap berhasil disalin!');
+            const text = document.getElementById('rekapTextArea').value;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => alert('Teks rekap berhasil disalin!'));
+            } else {
+                const textarea = document.getElementById('rekapTextArea');
+                textarea.select();
+                document.execCommand('copy');
+                alert('Teks rekap berhasil disalin!');
+            }
         }
 
         function downloadRekapTxt() {
@@ -1364,22 +1349,17 @@
         }
     </script>
 
-    <!-- Registrasi & Auto-Update Service Worker PWA -->
+    <!-- Registrasi Service Worker PWA -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('PWA ServiceWorker Arna Toys terdaftar:', reg.scope);
                     reg.update();
-
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
-                            if (installingWorker.state === 'installed') {
-                                if (navigator.serviceWorker.controller) {
-                                    console.log('Versi baru ditemukan. Memuat ulang aplikasi...');
-                                    window.location.reload();
-                                }
+                            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                window.location.reload();
                             }
                         };
                     };
