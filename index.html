@@ -77,10 +77,10 @@
     </div>
 
     <!-- MAIN APP SCREEN -->
-    <div id="appScreen" class="w-full max-w-4xl mx-auto bg-white min-h-screen shadow-lg relative flex flex-col hidden my-0 md:my-4 md:rounded-2xl md:min-h-[92vh] md:overflow-hidden">
+    <div id="appScreen" class="w-full max-w-4xl mx-auto bg-white min-h-screen shadow-lg relative flex flex-col hidden my-0 md:my-4 md:rounded-2xl md:min-h-[92vh]">
 
         <!-- HEADER -->
-        <header class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow">
+        <header class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow md:rounded-t-2xl">
             <div class="flex items-center space-x-3">
                 <div id="outletLogoContainer" class="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-sm shadow overflow-hidden relative">
                     <span id="outletLogoText" class="text-blue-600 font-bold text-xs">AT</span>
@@ -100,7 +100,7 @@
         </header>
 
         <!-- MAIN CONTENT -->
-        <main class="flex-1 pb-24 md:pb-8 overflow-y-auto">
+        <main class="flex-1 pb-24 md:pb-24 overflow-y-auto">
 
             <!-- TAB 1: DASHBOARD -->
             <section id="tabDashboard" class="p-4 md:p-6 space-y-4">
@@ -464,8 +464,8 @@
 
         </main>
 
-        <!-- BOTTOM NAVIGATION BAR -->
-        <nav class="bg-white border-t border-gray-200 absolute bottom-0 inset-x-0 w-full grid grid-cols-5 py-2 px-1 z-20 shadow-lg md:rounded-b-2xl">
+        <!-- BOTTOM NAVIGATION BAR (FIXED & MENGAMBANG) -->
+        <nav class="bg-white border-t border-gray-200 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl grid grid-cols-5 py-2 px-1 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:rounded-b-2xl">
             <button onclick="switchTab('Dashboard')" id="navTabDashboard" class="flex flex-col items-center justify-center text-blue-600 py-1 transition">
                 <i class="fa-solid fa-chart-pie text-base mb-0.5"></i>
                 <span class="text-[9px] md:text-xs font-medium">Dashboard</span>
@@ -597,7 +597,6 @@
         });
 
         function initRealtimeSync(uid) {
-            // Menggunakan .on tunggal untuk meminimalisasi event listener berulang
             db.ref('users/' + uid).on('value', snapshot => {
                 const profile = snapshot.val();
                 if (profile) {
@@ -626,7 +625,7 @@
         }
 
         function syncDataFromDB() {
-            db.ref('admin_config').off(); // Membersihkan listener lama untuk mencegah penumpukan
+            db.ref('admin_config').off();
             db.ref('admin_config').on('value', snap => {
                 if (snap.exists()) {
                     let cfg = snap.val();
