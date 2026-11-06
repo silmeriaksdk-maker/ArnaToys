@@ -1,54 +1,61 @@
-// Naikkan nama versi cache ini (misal: crs-pwa-v2, crs-pwa-v3) setiap kali Anda melakukan update kode
-const CACHE_NAME = 'ArnaToys-pwa-v1';
-
-const urlsToCache = [
+const CACHE_NAME = 'arna-toys-v1';
+const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './sw.js',
+  './148979.png',
+  'https://cdn.tailwindcss.com',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js'
 ];
 
-// Pasang Service Worker dan simpan cache dasar
-self.addEventListener('install', event => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[Service Worker] Caching app shell');
+      return cache.addAll(ASSETS_TO_CACHE);
+    }).then(() => self.skipWaiting())
   );
-  // Langsung aktifkan Service Worker baru tanpa menunggu sesi lama ditutup
-  self.skipWaiting();
 });
 
-// Bersihkan cache versi lama saat Service Worker baru aktif
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map(cache => {
+        cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
-            console.log('Menghapus cache lama:', cache);
+            console.log('[Service Worker] Deleting old cache:', cache);
             return caches.delete(cache);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Ambil data dari jaringan utama dulu, jika offline baru ambil dari cache
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
+  // Abaikan request Firebase Realtime DB & Auth agar data selalu fresh
+  if (event.request.url.includes('firebaseio.com') || event.request.url.includes('googleapis.com')) {
+    return;
+  }
+  
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Jika respons jaringan valid, simpan salinan terbaru ke cache
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request).then((fetchResponse) => {
+        return caches.open(CACHE_NAME).then((cache) => {
+          if (event.request.method === 'GET' && fetchResponse.status === 200) {
+            cache.put(event.request, fetchResponse.clone());
+          }
+          return fetchResponse;
+        });
+      });
+    }).catch(() => {
+      if (event.request.mode === 'navigate') {
+        return caches.match('./index.html');
+      }
+    })
   );
 });

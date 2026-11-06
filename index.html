@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRS - Community Retail Solidarity</title>
+    <title>Arna Toys V 1.0</title>
     
     <!-- Tag Konfigurasi PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563EB">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="CRS App">
+    <meta name="apple-mobile-web-app-title" content="Arna Toys">
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <!-- Tailwind CSS CDN -->
@@ -23,68 +23,75 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800 antialiased">
+<body class="bg-gray-100 font-sans text-gray-800 antialiased min-h-screen">
 
     <!-- AUTHENTICATION SCREEN -->
-    <div id="authScreen" class="max-w-md mx-auto bg-white min-h-screen shadow-lg flex flex-col justify-center p-6">
-        <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg mb-3">
-                CRS
+    <div id="authScreen" class="w-full min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+            <div class="text-center mb-6">
+                <!-- Logo Arna Toys -->
+                <div class="w-24 h-24 mx-auto mb-3 relative flex items-center justify-center">
+                    <img src="148979.png" alt="Arna Toys Logo" class="w-full h-full object-contain rounded-2xl drop-shadow-md">
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900">Arna Toys</h1>
+                <span class="inline-block bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">Versi V 1.0</span>
+                <p class="text-xs text-gray-500 mt-2">Masuk atau daftar untuk menyinkronkan data secara real-time.</p>
             </div>
-            <h1 class="text-xl font-bold text-gray-900">Community Retail Solidarity</h1>
-            <p class="text-xs text-gray-500 mt-1">Masuk atau daftar untuk menyinkronkan data secara real-time.</p>
+
+            <div class="flex border-b mb-4 text-xs font-semibold">
+                <button onclick="switchAuthTab('login')" id="tabLoginBtn" class="flex-1 py-2.5 text-blue-600 border-b-2 border-blue-600">Masuk (Login)</button>
+                <button onclick="switchAuthTab('register')" id="tabRegisterBtn" class="flex-1 py-2.5 text-gray-400">Daftar Akun Baru</button>
+            </div>
+
+            <form id="formLogin" onsubmit="handleLogin(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Email</label>
+                    <input type="email" id="loginEmail" required placeholder="nama@gmail.com" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg shadow transition">
+                    Masuk ke Aplikasi
+                </button>
+            </form>
+
+            <form id="formRegister" onsubmit="handleRegister(event)" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Email</label>
+                    <input type="email" id="regEmail" required placeholder="nama@gmail.com" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Password (Min. 6 karakter)</label>
+                    <input type="password" id="regPassword" required placeholder="••••••••" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Outlet / Cabang</label>
+                    <input type="text" id="regOutletName" required placeholder="Contoh: Arna Toys Cabang Cikampek" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2.5 rounded-lg shadow transition">
+                    Daftar Akun Baru
+                </button>
+            </form>
         </div>
-
-        <div class="flex border-b mb-4 text-xs font-semibold">
-            <button onclick="switchAuthTab('login')" id="tabLoginBtn" class="flex-1 py-2.5 text-blue-600 border-b-2 border-blue-600">Masuk (Login)</button>
-            <button onclick="switchAuthTab('register')" id="tabRegisterBtn" class="flex-1 py-2.5 text-gray-400">Daftar Akun Baru</button>
-        </div>
-
-        <form id="formLogin" onsubmit="handleLogin(event)" class="space-y-3">
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Email</label>
-                <input type="email" id="loginEmail" required placeholder="nama@gmail.com" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Password</label>
-                <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg shadow transition">
-                Masuk ke Aplikasi
-            </button>
-        </form>
-
-        <form id="formRegister" onsubmit="handleRegister(event)" class="space-y-3 hidden">
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Email</label>
-                <input type="email" id="regEmail" required placeholder="nama@gmail.com" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Password (Min. 6 karakter)</label>
-                <input type="password" id="regPassword" required placeholder="••••••••" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Outlet / Cabang</label>
-                <input type="text" id="regOutletName" required placeholder="Contoh: Outlet Cabang Cikampek" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2.5 rounded-lg shadow transition">
-                Daftar Akun Baru
-            </button>
-        </form>
     </div>
 
-    <!-- MAIN APP SCREEN -->
-    <div id="appScreen" class="max-w-md mx-auto bg-white min-h-screen shadow-lg relative flex flex-col hidden">
+    <!-- MAIN APP SCREEN (Responsif Desktop & Tablet) -->
+    <div id="appScreen" class="w-full max-w-4xl mx-auto bg-white min-h-screen shadow-lg relative flex flex-col hidden my-0 md:my-4 md:rounded-2xl md:min-h-[92vh] md:overflow-hidden">
 
         <!-- HEADER -->
         <header class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow">
-            <div class="flex items-center space-x-2">
-                <div id="outletLogoContainer" class="w-9 h-9 bg-white text-blue-600 rounded-full flex items-center justify-center font-bold text-sm shadow overflow-hidden relative">
-                    <span id="outletLogoText">CRS</span>
+            <div class="flex items-center space-x-3">
+                <div id="outletLogoContainer" class="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-sm shadow overflow-hidden relative">
+                    <span id="outletLogoText" class="text-blue-600 font-bold text-xs">AT</span>
                     <img id="outletLogoImg" class="w-full h-full object-cover hidden" alt="Logo">
                 </div>
                 <div>
-                    <h1 id="headerOutletName" class="font-bold text-base leading-tight">Pusat / Admin Utama</h1>
+                    <div class="flex items-center space-x-2">
+                        <h1 id="headerOutletName" class="font-bold text-base leading-tight">Arna Toys Pusat</h1>
+                        <span class="text-[10px] bg-blue-800 text-blue-200 px-2 py-0.5 rounded-full">V 1.0</span>
+                    </div>
                     <span id="headerRoleBadge" class="text-xs bg-blue-700 px-2 py-0.5 rounded-full font-medium">Mode Admin</span>
                 </div>
             </div>
@@ -94,10 +101,10 @@
         </header>
 
         <!-- MAIN CONTENT -->
-        <main class="flex-1 pb-20 overflow-y-auto">
+        <main class="flex-1 pb-24 md:pb-8 overflow-y-auto">
 
             <!-- TAB 1: DASHBOARD -->
-            <section id="tabDashboard" class="p-4 space-y-4">
+            <section id="tabDashboard" class="p-4 md:p-6 space-y-4">
                 <div id="inspectBanner" class="bg-amber-100 border-l-4 border-amber-500 text-amber-800 p-3 rounded-r-lg hidden flex justify-between items-center shadow-sm">
                     <div class="text-xs">
                         <span class="font-bold block"><i class="fa-solid fa-eye mr-1"></i> Mode Pemantauan Outlet</span>
@@ -109,35 +116,36 @@
                 </div>
 
                 <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-gray-800" id="dashTitleText">Ringkasan Kinerja</h2>
+                    <h2 class="text-lg font-bold text-gray-800" id="dashTitleText">Ringkasan Kinerja Arna Toys</h2>
                     <span class="text-xs text-gray-500 bg-gray-200 px-2.5 py-1 rounded-full font-medium" id="currentDateDisplay">-</span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 p-3.5 rounded-xl shadow-sm">
+                <!-- Grid Kartu Statistik Responsif (2 Kolom HP, 3 Kolom Tablet/PC) -->
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 p-3.5 md:p-5 rounded-xl shadow-sm">
                         <span class="text-xs font-semibold text-blue-600 uppercase tracking-wide">Omset</span>
-                        <h3 id="dashOmset" class="text-lg font-bold text-blue-900 mt-1">Rp 0</h3>
+                        <h3 id="dashOmset" class="text-lg md:text-xl font-bold text-blue-900 mt-1">Rp 0</h3>
                     </div>
-                    <div id="cardLabaBersih" class="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3.5 rounded-xl shadow-sm">
+                    <div id="cardLabaBersih" class="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3.5 md:p-5 rounded-xl shadow-sm">
                         <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Laba Bersih</span>
-                        <h3 id="dashLabaBersih" class="text-lg font-bold text-emerald-900 mt-1">Rp 0</h3>
+                        <h3 id="dashLabaBersih" class="text-lg md:text-xl font-bold text-emerald-900 mt-1">Rp 0</h3>
                     </div>
-                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 p-3.5 rounded-xl shadow-sm">
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 p-3.5 md:p-5 rounded-xl shadow-sm">
                         <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Laba Barang</span>
-                        <h3 id="dashLabaBarang" class="text-lg font-bold text-amber-900 mt-1">Rp 0</h3>
+                        <h3 id="dashLabaBarang" class="text-lg md:text-xl font-bold text-amber-900 mt-1">Rp 0</h3>
                     </div>
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 p-3.5 rounded-xl shadow-sm">
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 p-3.5 md:p-5 rounded-xl shadow-sm">
                         <span class="text-xs font-semibold text-purple-600 uppercase tracking-wide">Stok Barang</span>
-                        <h3 id="dashStok" class="text-lg font-bold text-purple-900 mt-1">0 Pcs</h3>
+                        <h3 id="dashStok" class="text-lg md:text-xl font-bold text-purple-900 mt-1">0 Pcs</h3>
                     </div>
-                    <div class="bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 p-3.5 rounded-xl shadow-sm">
+                    <div class="bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 p-3.5 md:p-5 rounded-xl shadow-sm">
                         <span class="text-xs font-semibold text-rose-600 uppercase tracking-wide">Barang Hilang (wr×)</span>
-                        <h3 id="dashBarangHilang" class="text-base font-bold text-rose-900 mt-1">0 Pcs</h3>
-                        <span id="dashNominalHilang" class="text-[10px] text-rose-700 block mt-0.5">Rp 0 (Kerugian)</span>
+                        <h3 id="dashBarangHilang" class="text-base md:text-lg font-bold text-rose-900 mt-1">0 Pcs</h3>
+                        <span id="dashNominalHilang" class="text-[10px] md:text-xs text-rose-700 block mt-0.5">Rp 0 (Kerugian)</span>
                     </div>
-                    <div class="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 p-3.5 rounded-xl shadow-sm">
+                    <div class="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 p-3.5 md:p-5 rounded-xl shadow-sm">
                         <span class="text-xs font-semibold text-teal-600 uppercase tracking-wide">Terjual</span>
-                        <h3 id="dashTerjual" class="text-lg font-bold text-teal-900 mt-1">0 Pcs</h3>
+                        <h3 id="dashTerjual" class="text-lg md:text-xl font-bold text-teal-900 mt-1">0 Pcs</h3>
                     </div>
                 </div>
 
@@ -153,17 +161,19 @@
             </section>
 
             <!-- TAB 2: PENJUALAN -->
-            <section id="tabPenjualan" class="p-4 space-y-4 hidden">
+            <section id="tabPenjualan" class="p-4 md:p-6 space-y-4 hidden">
                 <h2 class="text-lg font-bold text-gray-800">Input Transaksi Penjualan</h2>
                 
-                <form id="formPenjualan" onsubmit="handlePenjualanSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
-                        <input type="date" id="pTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Sales</label>
-                        <input type="text" id="pSales" placeholder="Contoh: Andi" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <form id="formPenjualan" onsubmit="handlePenjualanSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 md:p-5 shadow-sm space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
+                            <input type="date" id="pTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Sales</label>
+                            <input type="text" id="pSales" placeholder="Contoh: Andi" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -209,65 +219,67 @@
             </section>
 
             <!-- TAB 3: AKTIVITAS & STOK KELUAR -->
-            <section id="tabAktivitas" class="p-4 space-y-4 hidden">
+            <section id="tabAktivitas" class="p-4 md:p-6 space-y-4 hidden">
                 <h2 class="text-lg font-bold text-gray-800">Aktivitas (Pengeluaran & Stok Keluar)</h2>
 
-                <form id="formPengeluaran" onsubmit="handlePengeluaranSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
-                    <h3 class="text-xs font-bold text-blue-600 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Input Pengeluaran Operasional</h3>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
-                        <input type="date" id="exTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Keterangan (Wajib)</label>
-                        <input type="text" id="exKet" placeholder="Contoh: Beli bensin operasional / Galon" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form id="formPengeluaran" onsubmit="handlePengeluaranSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+                        <h3 class="text-xs font-bold text-blue-600 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Input Pengeluaran Operasional</h3>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Jumlah (Rp)</label>
-                            <input type="number" id="exNominal" placeholder="0" min="1" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
+                            <input type="date" id="exTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Sumber Potong</label>
-                            <select id="exSumber" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <option value="laba_bersih">Laba Bersih</option>
-                                <option value="laba_barang">Laba Barang (Kotor)</option>
-                            </select>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Keterangan (Wajib)</label>
+                            <input type="text" id="exKet" placeholder="Contoh: Beli bensin operasional" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
-                        Catat Pengeluaran
-                    </button>
-                </form>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Jumlah (Rp)</label>
+                                <input type="number" id="exNominal" placeholder="0" min="1" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Sumber Potong</label>
+                                <select id="exSumber" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <option value="laba_bersih">Laba Bersih</option>
+                                    <option value="laba_barang">Laba Barang (Kotor)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
+                            Catat Pengeluaran
+                        </button>
+                    </form>
 
-                <form id="formStokKeluar" onsubmit="handleStokKeluarSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
-                    <h3 class="text-xs font-bold text-purple-600 uppercase"><i class="fa-solid fa-boxes-stacked mr-1"></i> Input Stok Keluar (wr+, wr×, wr-)</h3>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
-                        <input type="date" id="skTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
+                    <form id="formStokKeluar" onsubmit="handleStokKeluarSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+                        <h3 class="text-xs font-bold text-purple-600 uppercase"><i class="fa-solid fa-boxes-stacked mr-1"></i> Input Stok Keluar (wr+, wr×, wr-)</h3>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Jenis Aktivitas</label>
-                            <select id="skJenis" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <option value="wr+">wr+ (Penambahan Warung)</option>
-                                <option value="wr×">wr× (Barang Hilang)</option>
-                                <option value="wr-">wr- (Warung Berhenti / Retur)</option>
-                            </select>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
+                            <input type="date" id="skTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Jenis Aktivitas</label>
+                                <select id="skJenis" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <option value="wr+">wr+ (Penambahan Warung)</option>
+                                    <option value="wr×">wr× (Barang Hilang)</option>
+                                    <option value="wr-">wr- (Warung Berhenti / Retur)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Jumlah (Pcs)</label>
+                                <input type="number" id="skPcs" placeholder="0" min="1" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Jumlah (Pcs)</label>
-                            <input type="number" id="skPcs" placeholder="0" min="1" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Keterangan / Nama Warung (Wajib)</label>
+                            <input type="text" id="skKet" placeholder="Contoh: Warung Pak Joko" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Keterangan / Nama Warung (Wajib)</label>
-                        <input type="text" id="skKet" placeholder="Contoh: Warung Pak Joko" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
-                        Catat Stok Keluar
-                    </button>
-                </form>
+                        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
+                            Catat Stok Keluar
+                        </button>
+                    </form>
+                </div>
 
                 <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-2">
                     <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2">Riwayat Pengeluaran & Stok Keluar</h3>
@@ -278,7 +290,7 @@
             </section>
 
             <!-- TAB 4: REKAP LAPORAN -->
-            <section id="tabRekap" class="p-4 space-y-4 hidden">
+            <section id="tabRekap" class="p-4 md:p-6 space-y-4 hidden">
                 <div class="flex justify-between items-center">
                     <h2 class="text-lg font-bold text-gray-800">Format Rekap Laporan</h2>
                     <button onclick="generateRekapFormat()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
@@ -302,7 +314,7 @@
             </section>
 
             <!-- TAB 5: PENGATURAN & KONVERSI -->
-            <section id="tabPengaturan" class="p-4 space-y-4 hidden">
+            <section id="tabPengaturan" class="p-4 md:p-6 space-y-4 hidden">
                 <h2 class="text-lg font-bold text-gray-800">Pengaturan & Konversi Sistem</h2>
 
                 <!-- PANEL STOK OUTLET -->
@@ -428,7 +440,7 @@
                     <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2"><i class="fa-solid fa-store text-blue-600 mr-1"></i> Identitas Outlet</h3>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Outlet / Cabang</label>
-                        <input type="text" id="cfgNamaOutlet" value="Pusat / Admin Utama" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <input type="text" id="cfgNamaOutlet" value="Arna Toys Pusat" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Logo Gambar Outlet (Pilih dari Penyimpanan)</label>
@@ -454,35 +466,35 @@
 
         </main>
 
-        <!-- BOTTOM NAVIGATION BAR -->
-        <nav class="bg-white border-t border-gray-200 fixed bottom-0 max-w-md w-full grid grid-cols-5 py-2 px-1 z-20 shadow-lg">
+        <!-- BOTTOM NAVIGATION BAR (Tetap Rapi di Ponsel mau pun Tablet/PC) -->
+        <nav class="bg-white border-t border-gray-200 absolute bottom-0 inset-x-0 w-full grid grid-cols-5 py-2 px-1 z-20 shadow-lg md:rounded-b-2xl">
             <button onclick="switchTab('Dashboard')" id="navTabDashboard" class="flex flex-col items-center justify-center text-blue-600 py-1 transition">
                 <i class="fa-solid fa-chart-pie text-base mb-0.5"></i>
-                <span class="text-[9px] font-medium">Dashboard</span>
+                <span class="text-[9px] md:text-xs font-medium">Dashboard</span>
             </button>
             <button onclick="switchTab('Penjualan')" id="navTabPenjualan" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
                 <i class="fa-solid fa-cart-shopping text-base mb-0.5"></i>
-                <span class="text-[9px] font-medium">Penjualan</span>
+                <span class="text-[9px] md:text-xs font-medium">Penjualan</span>
             </button>
             <button onclick="switchTab('Aktivitas')" id="navTabAktivitas" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
                 <i class="fa-solid fa-clipboard-list text-base mb-0.5"></i>
-                <span class="text-[9px] font-medium">Aktivitas</span>
+                <span class="text-[9px] md:text-xs font-medium">Aktivitas</span>
             </button>
             <button onclick="switchTab('Rekap')" id="navTabRekap" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
                 <i class="fa-solid fa-file-lines text-base mb-0.5"></i>
-                <span class="text-[9px] font-medium">Rekap</span>
+                <span class="text-[9px] md:text-xs font-medium">Rekap</span>
             </button>
             <button onclick="switchTab('Pengaturan')" id="navTabPengaturan" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
                 <i class="fa-solid fa-gear text-base mb-0.5"></i>
-                <span class="text-[9px] font-medium">Pengaturan</span>
+                <span class="text-[9px] md:text-xs font-medium">Pengaturan</span>
             </button>
         </nav>
 
         <!-- SLIDE DRAWER -->
         <div id="drawerOverlay" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity" onclick="toggleDrawer(false)"></div>
-        <div id="slideDrawer" class="fixed top-0 right-0 w-72 h-full bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div id="slideDrawer" class="fixed top-0 right-0 w-72 md:w-80 h-full bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
             <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
-                <h3 class="font-bold text-sm"><i class="fa-solid fa-network-wired mr-1.5"></i> Daftar Outlet Terdaftar</h3>
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-network-wired mr-1.5"></i> Daftar Outlet Arna Toys</h3>
                 <button onclick="toggleDrawer(false)" class="p-1.5 text-white hover:bg-blue-700 rounded-lg">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
@@ -491,7 +503,7 @@
                 <p class="text-xs text-gray-500">Memuat daftar outlet...</p>
             </div>
             <div class="p-3 border-t bg-gray-50 text-center">
-                <span class="text-[10px] text-gray-400">CRS Real-Time v1.0</span>
+                <span class="text-[10px] text-gray-400">Arna Toys Real-Time V 1.0</span>
             </div>
         </div>
 
@@ -519,7 +531,7 @@
 
         let appState = {
             isAdmin: true,
-            currentOutlet: 'Pusat / Admin Utama',
+            currentOutlet: 'Arna Toys Pusat',
             inspectingOutletId: null,
             inspectingOutletName: '',
             logoUrl: '',
@@ -613,7 +625,7 @@
                 } else {
                     db.ref('users/' + uid).set({
                         email: currentUser.email,
-                        outletName: "Outlet Baru",
+                        outletName: "Arna Toys Outlet",
                         isAdmin: false
                     });
                 }
@@ -830,7 +842,7 @@
                 let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
                 let downloadAnchor = document.createElement('a');
                 downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", `CRS_Backup_${new Date().toISOString().split('T')[0]}.json`);
+                downloadAnchor.setAttribute("download", `ArnaToys_Backup_${new Date().toISOString().split('T')[0]}.json`);
                 document.body.appendChild(downloadAnchor);
                 downloadAnchor.click();
                 downloadAnchor.remove();
@@ -968,8 +980,8 @@
             appState.inspectingOutletId = null;
             appState.inspectingOutletName = '';
 
-            document.getElementById('headerOutletName').innerText = appState.currentOutlet || 'Pusat / Admin Utama';
-            document.getElementById('dashTitleText').innerText = 'Ringkasan Kinerja';
+            document.getElementById('headerOutletName').innerText = appState.currentOutlet || 'Arna Toys Pusat';
+            document.getElementById('dashTitleText').innerText = 'Ringkasan Kinerja Arna Toys';
             document.getElementById('inspectBanner').classList.add('hidden');
 
             processAdminDataView();
@@ -1309,7 +1321,7 @@
             const labaBersih = (totalTerjual * manualLabaBrs) - totalPengeluaranLabaBersih;
             const stokAkhir = hitungStokAktifFisik();
 
-            let formatStr = `=== REKAPITULASI KINERJA RETAIL CRS ===\n`;
+            let formatStr = `=== REKAPITULASI KINERJA RETAIL ARNA TOYS ===\n`;
             formatStr += `Outlet / Cabang : ${appState.currentOutlet}\n`;
             formatStr += `Tanggal Cetak   : ${new Date().toLocaleString('id-ID')}\n`;
             formatStr += `----------------------------------------\n\n`;
@@ -1345,7 +1357,7 @@
             let url = URL.createObjectURL(blob);
             let anchor = document.createElement('a');
             anchor.href = url;
-            anchor.download = `Rekap_CRS_${new Date().toISOString().split('T')[0]}.txt`;
+            anchor.download = `Rekap_ArnaToys_${new Date().toISOString().split('T')[0]}.txt`;
             document.body.appendChild(anchor);
             anchor.click();
             anchor.remove();
@@ -1357,12 +1369,9 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('PWA ServiceWorker terdaftar:', reg.scope);
-                    
-                    // Cek pembaruan saat pengguna kembali membuka halaman
+                    console.log('PWA ServiceWorker Arna Toys terdaftar:', reg.scope);
                     reg.update();
 
-                    // Tangani pembaruan Service Worker secara otomatis
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
