@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRS - Community Retail Solidarity</title>
+    
+    <!-- Tag Konfigurasi PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563EB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CRS App">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase JS SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 antialiased">
+
+    <!-- AUTHENTICATION SCREEN -->
+    <div id="authScreen" class="max-w-md mx-auto bg-white min-h-screen shadow-lg flex flex-col justify-center p-6">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-lg mb-3">
+                CRS
+            </div>
+            <h1 class="text-xl font-bold text-gray-900">Community Retail Solidarity</h1>
+            <p class="text-xs text-gray-500 mt-1">Masuk atau daftar untuk menyinkronkan data secara real-time.</p>
+        </div>
+
+        <div class="flex border-b mb-4 text-xs font-semibold">
+            <button onclick="switchAuthTab('login')" id="tabLoginBtn" class="flex-1 py-2.5 text-blue-600 border-b-2 border-blue-600">Masuk (Login)</button>
+            <button onclick="switchAuthTab('register')" id="tabRegisterBtn" class="flex-1 py-2.5 text-gray-400">Daftar Akun Baru</button>
+        </div>
+
+        <form id="formLogin" onsubmit="handleLogin(event)" class="space-y-3">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Email</label>
+                <input type="email" id="loginEmail" required placeholder="nama@gmail.com" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Password</label>
+                <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg shadow transition">
+                Masuk ke Aplikasi
+            </button>
+        </form>
+
+        <form id="formRegister" onsubmit="handleRegister(event)" class="space-y-3 hidden">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Email</label>
+                <input type="email" id="regEmail" required placeholder="nama@gmail.com" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Password (Min. 6 karakter)</label>
+                <input type="password" id="regPassword" required placeholder="••••••••" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Outlet / Cabang</label>
+                <input type="text" id="regOutletName" required placeholder="Contoh: Outlet Cabang Cikampek" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2.5 rounded-lg shadow transition">
+                Daftar Akun Baru
+            </button>
+        </form>
+    </div>
+
+    <!-- MAIN APP SCREEN -->
+    <div id="appScreen" class="max-w-md mx-auto bg-white min-h-screen shadow-lg relative flex flex-col hidden">
+
+        <!-- HEADER -->
+        <header class="bg-blue-600 text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow">
+            <div class="flex items-center space-x-2">
+                <div id="outletLogoContainer" class="w-9 h-9 bg-white text-blue-600 rounded-full flex items-center justify-center font-bold text-sm shadow overflow-hidden relative">
+                    <span id="outletLogoText">CRS</span>
+                    <img id="outletLogoImg" class="w-full h-full object-cover hidden" alt="Logo">
+                </div>
+                <div>
+                    <h1 id="headerOutletName" class="font-bold text-base leading-tight">Pusat / Admin Utama</h1>
+                    <span id="headerRoleBadge" class="text-xs bg-blue-700 px-2 py-0.5 rounded-full font-medium">Mode Admin</span>
+                </div>
+            </div>
+            <button id="btnHamburger" onclick="toggleDrawer(true)" class="p-2 text-white focus:outline-none hover:bg-blue-700 rounded-lg transition">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 pb-20 overflow-y-auto">
+
+            <!-- TAB 1: DASHBOARD -->
+            <section id="tabDashboard" class="p-4 space-y-4">
+                <div id="inspectBanner" class="bg-amber-100 border-l-4 border-amber-500 text-amber-800 p-3 rounded-r-lg hidden flex justify-between items-center shadow-sm">
+                    <div class="text-xs">
+                        <span class="font-bold block"><i class="fa-solid fa-eye mr-1"></i> Mode Pemantauan Outlet</span>
+                        <span>Melihat data: <b id="inspectOutletNameDisplay" class="underline">Outlet</b></span>
+                    </div>
+                    <button onclick="keluarModeInspect()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-medium shadow transition whitespace-nowrap">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar
+                    </button>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-800" id="dashTitleText">Ringkasan Kinerja</h2>
+                    <span class="text-xs text-gray-500 bg-gray-200 px-2.5 py-1 rounded-full font-medium" id="currentDateDisplay">-</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 p-3.5 rounded-xl shadow-sm">
+                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wide">Omset</span>
+                        <h3 id="dashOmset" class="text-lg font-bold text-blue-900 mt-1">Rp 0</h3>
+                    </div>
+                    <div id="cardLabaBersih" class="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-3.5 rounded-xl shadow-sm">
+                        <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Laba Bersih</span>
+                        <h3 id="dashLabaBersih" class="text-lg font-bold text-emerald-900 mt-1">Rp 0</h3>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 p-3.5 rounded-xl shadow-sm">
+                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Laba Barang</span>
+                        <h3 id="dashLabaBarang" class="text-lg font-bold text-amber-900 mt-1">Rp 0</h3>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 p-3.5 rounded-xl shadow-sm">
+                        <span class="text-xs font-semibold text-purple-600 uppercase tracking-wide">Stok Barang</span>
+                        <h3 id="dashStok" class="text-lg font-bold text-purple-900 mt-1">0 Pcs</h3>
+                    </div>
+                    <div class="bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 p-3.5 rounded-xl shadow-sm">
+                        <span class="text-xs font-semibold text-rose-600 uppercase tracking-wide">Barang Hilang (wr×)</span>
+                        <h3 id="dashBarangHilang" class="text-base font-bold text-rose-900 mt-1">0 Pcs</h3>
+                        <span id="dashNominalHilang" class="text-[10px] text-rose-700 block mt-0.5">Rp 0 (Kerugian)</span>
+                    </div>
+                    <div class="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 p-3.5 rounded-xl shadow-sm">
+                        <span class="text-xs font-semibold text-teal-600 uppercase tracking-wide">Terjual</span>
+                        <h3 id="dashTerjual" class="text-lg font-bold text-teal-900 mt-1">0 Pcs</h3>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mt-4 space-y-3">
+                    <h3 class="text-sm font-bold text-gray-700"><i class="fa-solid fa-shield-halved text-blue-600 mr-1.5"></i> Status Sesi & Akun</h3>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-600" id="roleStatusText">Status: Akses Admin Penuh</span>
+                        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition shadow-sm">
+                            <i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: PENJUALAN -->
+            <section id="tabPenjualan" class="p-4 space-y-4 hidden">
+                <h2 class="text-lg font-bold text-gray-800">Input Transaksi Penjualan</h2>
+                
+                <form id="formPenjualan" onsubmit="handlePenjualanSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
+                        <input type="date" id="pTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Sales</label>
+                        <input type="text" id="pSales" placeholder="Contoh: Andi" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label id="labelSatuanBawa" class="block text-xs font-semibold text-gray-600 mb-1">Jumlah Terpal/Pack</label>
+                            <input type="number" id="pJumlahBawa" placeholder="0" min="1" required oninput="hitungKonversiBawa()" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <span id="previewKonversiBawa" class="text-[10px] text-gray-500 mt-1 block">Setara: 0 Pcs</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Sisa Barang (Pcs)</label>
+                            <input type="number" id="pSisa" placeholder="0" min="0" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
+                        Simpan Penjualan
+                    </button>
+                </form>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mt-4">
+                    <div class="p-3 bg-gray-50 border-b border-gray-200">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase">Riwayat Tabel Penjualan</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 border-b">
+                                    <th class="p-2.5">No.</th>
+                                    <th class="p-2.5">Tgl</th>
+                                    <th class="p-2.5">Sales</th>
+                                    <th class="p-2.5">Bawa</th>
+                                    <th class="p-2.5">Sisa</th>
+                                    <th class="p-2.5">Terjual</th>
+                                    <th class="p-2.5">Total Rp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablePenjualanBody" class="divide-y divide-gray-200 text-gray-700">
+                                <tr>
+                                    <td colspan="7" class="p-4 text-center text-gray-400 italic">Belum ada data penjualan</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: AKTIVITAS & STOK KELUAR -->
+            <section id="tabAktivitas" class="p-4 space-y-4 hidden">
+                <h2 class="text-lg font-bold text-gray-800">Aktivitas (Pengeluaran & Stok Keluar)</h2>
+
+                <form id="formPengeluaran" onsubmit="handlePengeluaranSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+                    <h3 class="text-xs font-bold text-blue-600 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Input Pengeluaran Operasional</h3>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
+                        <input type="date" id="exTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Keterangan (Wajib)</label>
+                        <input type="text" id="exKet" placeholder="Contoh: Beli bensin operasional / Galon" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Jumlah (Rp)</label>
+                            <input type="number" id="exNominal" placeholder="0" min="1" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Sumber Potong</label>
+                            <select id="exSumber" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="laba_bersih">Laba Bersih</option>
+                                <option value="laba_barang">Laba Barang (Kotor)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
+                        Catat Pengeluaran
+                    </button>
+                </form>
+
+                <form id="formStokKeluar" onsubmit="handleStokKeluarSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+                    <h3 class="text-xs font-bold text-purple-600 uppercase"><i class="fa-solid fa-boxes-stacked mr-1"></i> Input Stok Keluar (wr+, wr×, wr-)</h3>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
+                        <input type="date" id="skTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Jenis Aktivitas</label>
+                            <select id="skJenis" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="wr+">wr+ (Penambahan Warung)</option>
+                                <option value="wr×">wr× (Barang Hilang)</option>
+                                <option value="wr-">wr- (Warung Berhenti / Retur)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Jumlah (Pcs)</label>
+                            <input type="number" id="skPcs" placeholder="0" min="1" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Keterangan / Nama Warung (Wajib)</label>
+                        <input type="text" id="skKet" placeholder="Contoh: Warung Pak Joko" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
+                        Catat Stok Keluar
+                    </button>
+                </form>
+
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-2">
+                    <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2">Riwayat Pengeluaran & Stok Keluar</h3>
+                    <div id="listAktivitasContainer" class="space-y-2 max-h-60 overflow-y-auto">
+                        <p class="text-xs text-gray-400 italic text-center py-2">Belum ada riwayat aktivitas.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: REKAP LAPORAN -->
+            <section id="tabRekap" class="p-4 space-y-4 hidden">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-800">Format Rekap Laporan</h2>
+                    <button onclick="generateRekapFormat()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+                        <i class="fa-solid fa-sync mr-1"></i> Perbarui Rekap
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500">Rangkuman data operasional dan keuangan yang siap disalin atau diunduh sebagai laporan resmi.</p>
+
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <span class="text-xs font-bold text-gray-700 uppercase"><i class="fa-solid fa-clipboard text-blue-600 mr-1"></i> Teks Format Rekap</span>
+                        <button onclick="copyRekapText()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1 rounded font-medium transition">
+                            <i class="fa-solid fa-copy mr-1"></i> Salin Teks
+                        </button>
+                    </div>
+                    <textarea id="rekapTextArea" readonly rows="13" class="w-full text-xs font-mono bg-gray-50 border rounded-lg p-2.5 focus:outline-none text-gray-700 select-all"></textarea>
+                    <button onclick="downloadRekapTxt()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs py-2.5 rounded-lg shadow transition flex items-center justify-center">
+                        <i class="fa-solid fa-file-arrow-down mr-1.5"></i> Unduh File Rekap (.txt)
+                    </button>
+                </div>
+            </section>
+
+            <!-- TAB 5: PENGATURAN & KONVERSI -->
+            <section id="tabPengaturan" class="p-4 space-y-4 hidden">
+                <h2 class="text-lg font-bold text-gray-800">Pengaturan & Konversi Sistem</h2>
+
+                <!-- PANEL STOK OUTLET -->
+                <div id="outletStockPanel" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3 hidden">
+                    <h3 class="text-xs font-bold text-emerald-700 uppercase border-b pb-2"><i class="fa-solid fa-boxes-stacked mr-1"></i> Manajemen Stok Gudang Outlet</h3>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] text-emerald-800 font-semibold uppercase block">Stok Gudang Saat Ini</span>
+                            <span id="outletDisplayStok" class="text-base font-bold text-emerald-900">0 Pcs</span>
+                        </div>
+                        <button onclick="outletTambahStokPrompt()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition">
+                            <i class="fa-solid fa-plus mr-1"></i> Tambah Stok
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-500 italic">*Nilai konversi sistem secara otomatis diatur secara terpusat oleh Admin.</p>
+                </div>
+
+                <!-- PANEL KONVERSI ADMIN -->
+                <div id="adminConversionPanel" class="space-y-3">
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2"><i class="fa-solid fa-sliders text-blue-600 mr-1"></i> Parameter Konversi & Nilai Dasar (Admin)</h3>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Satuan Kemasan</label>
+                                <select id="cfgSatuanKemasan" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <option value="Terpal">Terpal</option>
+                                    <option value="Pack">Pack</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Isi per Satuan (Pcs)</label>
+                                <input type="number" id="cfgIsiPerSatuan" value="50" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">1 Pcs = (Rp)</label>
+                            <input type="number" id="cfgHargaPcs" value="1200" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Target/Basis Laba Barang (Rp)</label>
+                                <input type="number" id="cfgManualLabaBarang" value="500" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Per Pcs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Basis Laba Bersih (Rp)</label>
+                                <input type="number" id="cfgManualLabaBersih" value="400" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Per Pcs">
+                            </div>
+                        </div>
+
+                        <button onclick="simpanKonfigurasi()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition mt-2">
+                            Simpan & Sinkronkan Pengaturan Ke Semua Outlet
+                        </button>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm space-y-2">
+                        <h3 class="text-xs font-bold text-blue-800 uppercase border-b border-blue-200 pb-2"><i class="fa-solid fa-warehouse mr-1"></i> Kontrol Stok Gudang (Admin)</h3>
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button onclick="adminAdjustStok('tambah')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded-lg font-medium shadow">
+                                <i class="fa-solid fa-plus mr-1"></i> Tambah Stok
+                            </button>
+                            <button onclick="adminAdjustStok('kurang')" class="bg-red-600 hover:bg-red-700 text-white text-xs py-2 rounded-lg font-medium shadow">
+                                <i class="fa-solid fa-minus mr-1"></i> Kurangi Stok
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MENU MAINTENANCE TERPROTEKSI -->
+                <div id="adminMaintenanceSection" class="bg-slate-900 text-white rounded-xl p-4 shadow-md space-y-3 hidden">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400"><i class="fa-solid fa-screwdriver-wrench mr-1.5"></i> Menu Maintenance Sistem</h3>
+                        <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">Protected</span>
+                    </div>
+
+                    <div id="maintenanceLockedView" class="text-center py-3 space-y-2">
+                        <p class="text-xs text-slate-400">Akses menu maintenance dikunci demi keamanan data.</p>
+                        <button onclick="bukaMenuMaintenance()" class="w-full bg-amber-600 hover:bg-amber-700 text-white text-xs py-2.5 rounded-lg font-medium shadow transition">
+                            <i class="fa-solid fa-lock-open mr-1"></i> Masuk Menu Maintenance
+                        </button>
+                    </div>
+
+                    <div id="maintenanceUnlockedView" class="space-y-3 hidden">
+                        <div class="bg-slate-800 p-3 rounded-lg space-y-1.5 border border-slate-700">
+                            <span class="text-[11px] font-bold text-rose-400 block"><i class="fa-solid fa-user-xmark mr-1"></i> Hapus Akun & Data</span>
+                            <p class="text-[10px] text-slate-400">Menghapus akun aktif ini secara permanen dari Firebase Auth beserta seluruh data transaksinya.</p>
+                            <button onclick="hapusAkunDanDataFirebase()" class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs py-2 rounded font-medium shadow transition">
+                                Hapus Akun & Data Saya
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-800 p-3 rounded-lg space-y-1.5 border border-slate-700">
+                            <span class="text-[11px] font-bold text-purple-400 block"><i class="fa-solid fa-broom mr-1"></i> Pemeliharaan Database (Hapus Sampah)</span>
+                            <p class="text-[10px] text-slate-400">Menghapus data transaksi dari akun/email yang sudah tidak terdaftar di sistem.</p>
+                            <button onclick="bersihkanSampahDatabase()" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs py-2 rounded font-medium shadow transition">
+                                Bersihkan Sampah Data
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-800 p-3 rounded-lg space-y-2 border border-slate-700">
+                            <span class="text-[11px] font-bold text-blue-400 block"><i class="fa-solid fa-database mr-1"></i> Pencadangan & Pemulihan</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="backupDatabaseJson()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded font-medium shadow transition">
+                                    <i class="fa-solid fa-download mr-1"></i> Cadangkan
+                                </button>
+                                <label class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2 rounded font-medium shadow transition text-center cursor-pointer flex items-center justify-center">
+                                    <i class="fa-solid fa-upload mr-1"></i> Pulihkan
+                                    <input type="file" id="restoreFile" accept=".json" onchange="restoreDatabaseJson(event)" class="hidden">
+                                </label>
+                            </div>
+                        </div>
+
+                        <button onclick="tutupMenuMaintenance()" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs py-2 rounded font-medium transition">
+                            <i class="fa-solid fa-lock mr-1"></i> Kunci Kembali
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KUSTOMISASI OUTLET & LOGO -->
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+                    <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2"><i class="fa-solid fa-store text-blue-600 mr-1"></i> Identitas Outlet</h3>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Outlet / Cabang</label>
+                        <input type="text" id="cfgNamaOutlet" value="Pusat / Admin Utama" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Logo Gambar Outlet (Pilih dari Penyimpanan)</label>
+                        <input type="file" id="cfgLogoFile" accept="image/*" onchange="previewAndSaveLogo(event)" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                    <button onclick="simpanIdentitasOutlet()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
+                        Perbarui Identitas Outlet
+                    </button>
+                </div>
+
+                <!-- BUKA FUNGSI ADMIN -->
+                <div id="panelAdminTools" class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                    <h3 class="text-xs font-bold text-amber-800 uppercase border-b border-amber-200 pb-2"><i class="fa-solid fa-key mr-1"></i> Buka Fungsi Admin</h3>
+                    <p class="text-xs text-amber-700">Masukkan kode admin rahasia untuk membuka hak akses admin penuh.</p>
+                    <div class="flex space-x-2">
+                        <input type="password" id="inputAdminCode" placeholder="Masukkan kode rahasia" class="w-full text-sm border border-amber-300 rounded-lg p-2 bg-white focus:outline-none">
+                        <button onclick="verifikasiKodeAdmin()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg font-medium shadow transition whitespace-nowrap">
+                            Buka Admin
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- BOTTOM NAVIGATION BAR -->
+        <nav class="bg-white border-t border-gray-200 fixed bottom-0 max-w-md w-full grid grid-cols-5 py-2 px-1 z-20 shadow-lg">
+            <button onclick="switchTab('Dashboard')" id="navTabDashboard" class="flex flex-col items-center justify-center text-blue-600 py-1 transition">
+                <i class="fa-solid fa-chart-pie text-base mb-0.5"></i>
+                <span class="text-[9px] font-medium">Dashboard</span>
+            </button>
+            <button onclick="switchTab('Penjualan')" id="navTabPenjualan" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
+                <i class="fa-solid fa-cart-shopping text-base mb-0.5"></i>
+                <span class="text-[9px] font-medium">Penjualan</span>
+            </button>
+            <button onclick="switchTab('Aktivitas')" id="navTabAktivitas" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
+                <i class="fa-solid fa-clipboard-list text-base mb-0.5"></i>
+                <span class="text-[9px] font-medium">Aktivitas</span>
+            </button>
+            <button onclick="switchTab('Rekap')" id="navTabRekap" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
+                <i class="fa-solid fa-file-lines text-base mb-0.5"></i>
+                <span class="text-[9px] font-medium">Rekap</span>
+            </button>
+            <button onclick="switchTab('Pengaturan')" id="navTabPengaturan" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
+                <i class="fa-solid fa-gear text-base mb-0.5"></i>
+                <span class="text-[9px] font-medium">Pengaturan</span>
+            </button>
+        </nav>
+
+        <!-- SLIDE DRAWER -->
+        <div id="drawerOverlay" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity" onclick="toggleDrawer(false)"></div>
+        <div id="slideDrawer" class="fixed top-0 right-0 w-72 h-full bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+            <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-network-wired mr-1.5"></i> Daftar Outlet Terdaftar</h3>
+                <button onclick="toggleDrawer(false)" class="p-1.5 text-white hover:bg-blue-700 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto space-y-2.5" id="drawerOutletList">
+                <p class="text-xs text-gray-500">Memuat daftar outlet...</p>
+            </div>
+            <div class="p-3 border-t bg-gray-50 text-center">
+                <span class="text-[10px] text-gray-400">CRS Real-Time v1.0</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FIREBASE INITIALIZATION & SCRIPT -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7YYO9OMRQ9aKBWDvfhsuOPkGg5WL2C8c",
+            authDomain: "boltv2.firebaseapp.com",
+            databaseURL: "https://boltv2-default-rtdb.firebaseio.com",
+            projectId: "boltv2",
+            storageBucket: "boltv2.firebasestorage.app",
+            messagingSenderId: "866545434060",
+            appId: "1:866545434060:web:40eb55595b3e96e3193169",
+            measurementId: "G-LNVE8TQV7L"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let currentUser = null;
+        const SECRET_MAINTENANCE_PASS = "531208";
+
+        let appState = {
+            isAdmin: true,
+            currentOutlet: 'Pusat / Admin Utama',
+            inspectingOutletId: null,
+            inspectingOutletName: '',
+            logoUrl: '',
+            rawOutletsData: {},
+            config: {
+                hargaPcs: 1200,
+                satuanKemasan: 'Terpal',
+                isiPerSatuan: 50,
+                stokDelta: 0,
+                manualLabaBarang: 500,
+                manualLabaBersih: 400
+            },
+            dataPenjualan: [],
+            dataAktivitas: []
+        };
+
+        function switchAuthTab(tab) {
+            if (tab === 'login') {
+                document.getElementById('formLogin').classList.remove('hidden');
+                document.getElementById('formRegister').classList.add('hidden');
+                document.getElementById('tabLoginBtn').className = 'flex-1 py-2.5 text-blue-600 border-b-2 border-blue-600';
+                document.getElementById('tabRegisterBtn').className = 'flex-1 py-2.5 text-gray-400';
+            } else {
+                document.getElementById('formLogin').classList.add('hidden');
+                document.getElementById('formRegister').classList.remove('hidden');
+                document.getElementById('tabRegisterBtn').className = 'flex-1 py-2.5 text-emerald-600 border-b-2 border-emerald-600';
+                document.getElementById('tabLoginBtn').className = 'flex-1 py-2.5 text-gray-400';
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            auth.signInWithEmailAndPassword(
+                document.getElementById('loginEmail').value,
+                document.getElementById('loginPassword').value
+            ).catch(err => alert("Gagal Masuk: " + err.message));
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value;
+            const pass = document.getElementById('regPassword').value;
+            const outletName = document.getElementById('regOutletName').value;
+
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then(cred => {
+                    db.ref('users/' + cred.user.uid).set({
+                        email: email,
+                        outletName: outletName,
+                        isAdmin: false
+                    });
+                })
+                .catch(err => alert("Gagal Daftar: " + err.message));
+        }
+
+        function logout() {
+            auth.signOut();
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('appScreen').classList.remove('hidden');
+                initRealtimeSync(user.uid);
+            } else {
+                currentUser = null;
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('appScreen').classList.add('hidden');
+            }
+        });
+
+        function initRealtimeSync(uid) {
+            db.ref('users/' + uid).on('value', snapshot => {
+                const profile = snapshot.val();
+                if (profile) {
+                    appState.isAdmin = profile.isAdmin;
+                    appState.currentOutlet = profile.outletName;
+                    if (profile.logoUrl) {
+                        appState.logoUrl = profile.logoUrl;
+                        setLogoUI(profile.logoUrl);
+                    }
+                    
+                    if (!appState.inspectingOutletId) {
+                        document.getElementById('headerOutletName').innerText = profile.outletName;
+                    }
+                    document.getElementById('cfgNamaOutlet').value = profile.outletName;
+                    
+                    applyRoleUI();
+                    syncDataFromDB();
+                } else {
+                    db.ref('users/' + uid).set({
+                        email: currentUser.email,
+                        outletName: "Outlet Baru",
+                        isAdmin: false
+                    });
+                }
+            });
+        }
+
+        function syncDataFromDB() {
+            db.ref('admin_config').on('value', snap => {
+                if (snap.exists()) {
+                    let cfg = snap.val();
+                    appState.config.hargaPcs = cfg.hargaPcs ?? appState.config.hargaPcs;
+                    appState.config.satuanKemasan = cfg.satuanKemasan ?? appState.config.satuanKemasan;
+                    appState.config.isiPerSatuan = cfg.isiPerSatuan ?? appState.config.isiPerSatuan;
+                    appState.config.manualLabaBarang = cfg.manualLabaBarang ?? appState.config.manualLabaBarang;
+                    appState.config.manualLabaBersih = cfg.manualLabaBersih ?? appState.config.manualLabaBersih;
+                    if (cfg.logoUrl) {
+                        appState.logoUrl = cfg.logoUrl;
+                        setLogoUI(cfg.logoUrl);
+                    }
+                    if (appState.isAdmin && !appState.inspectingOutletId) {
+                        appState.config.stokDelta = cfg.stokDelta ?? appState.config.stokDelta;
+                    }
+                    updateUIConfigFields();
+                    refreshDashboard();
+                }
+            });
+
+            if (appState.isAdmin) {
+                db.ref('outlets').on('value', outletSnap => {
+                    appState.rawOutletsData = outletSnap.val() || {};
+                    processAdminDataView();
+                });
+            } else {
+                db.ref(`outlets/${currentUser.uid}`).on('value', outletSnap => {
+                    const outVal = outletSnap.val();
+                    if (outVal) {
+                        appState.dataPenjualan = outVal.penjualan || [];
+                        appState.dataAktivitas = outVal.aktivitas || [];
+                        if (outVal.stokDelta !== undefined) appState.config.stokDelta = outVal.stokDelta;
+                    } else {
+                        appState.dataPenjualan = [];
+                        appState.dataAktivitas = [];
+                        appState.config.stokDelta = 0;
+                    }
+                    renderTabelPenjualan();
+                    renderAktivitas();
+                    refreshDashboard();
+                });
+            }
+        }
+
+        function processAdminDataView() {
+            if (!appState.isAdmin) return;
+
+            if (appState.inspectingOutletId) {
+                let outletData = appState.rawOutletsData[appState.inspectingOutletId] || {};
+                appState.dataPenjualan = outletData.penjualan ? (Array.isArray(outletData.penjualan) ? outletData.penjualan : Object.values(outletData.penjualan)) : [];
+                appState.dataAktivitas = outletData.aktivitas ? (Array.isArray(outletData.aktivitas) ? outletData.aktivitas : Object.values(outletData.aktivitas)) : [];
+                appState.config.stokDelta = outletData.stokDelta || 0;
+            } else {
+                let combinedPenjualan = [];
+                let combinedAktivitas = [];
+
+                Object.values(appState.rawOutletsData).forEach(outletData => {
+                    if (outletData.penjualan) {
+                        let pList = Array.isArray(outletData.penjualan) ? outletData.penjualan : Object.values(outletData.penjualan);
+                        combinedPenjualan = combinedPenjualan.concat(pList);
+                    }
+                    if (outletData.aktivitas) {
+                        let aList = Array.isArray(outletData.aktivitas) ? outletData.aktivitas : Object.values(outletData.aktivitas);
+                        combinedAktivitas = combinedAktivitas.concat(aList);
+                    }
+                });
+
+                appState.dataPenjualan = combinedPenjualan;
+                appState.dataAktivitas = combinedAktivitas;
+            }
+
+            renderTabelPenjualan();
+            renderAktivitas();
+            refreshDashboard();
+        }
+
+        function updateUIConfigFields() {
+            document.getElementById('cfgHargaPcs').value = appState.config.hargaPcs || 1200;
+            document.getElementById('cfgSatuanKemasan').value = appState.config.satuanKemasan || 'Terpal';
+            document.getElementById('cfgIsiPerSatuan').value = appState.config.isiPerSatuan || 50;
+            document.getElementById('cfgManualLabaBarang').value = appState.config.manualLabaBarang || 500;
+            document.getElementById('cfgManualLabaBersih').value = appState.config.manualLabaBersih || 400;
+
+            const lbl = document.getElementById('labelSatuanBawa');
+            if (lbl) lbl.innerText = `Jumlah ${appState.config.satuanKemasan || 'Terpal'}`;
+        }
+
+        function saveDataToDB() {
+            if (appState.isAdmin) {
+                if (appState.inspectingOutletId) {
+                    db.ref(`outlets/${appState.inspectingOutletId}`).update({
+                        stokDelta: appState.config.stokDelta
+                    });
+                } else {
+                    db.ref('admin_config').update({
+                        hargaPcs: appState.config.hargaPcs,
+                        satuanKemasan: appState.config.satuanKemasan,
+                        isiPerSatuan: appState.config.isiPerSatuan,
+                        stokDelta: appState.config.stokDelta,
+                        manualLabaBarang: appState.config.manualLabaBarang,
+                        manualLabaBersih: appState.config.manualLabaBersih
+                    });
+                }
+            } else {
+                let dataPath = `outlets/${currentUser.uid}`;
+                db.ref(dataPath).set({
+                    penjualan: appState.dataPenjualan || [],
+                    aktivitas: appState.dataAktivitas || [],
+                    stokDelta: appState.config.stokDelta || 0
+                });
+            }
+        }
+
+        function previewAndSaveLogo(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let base64Img = e.target.result;
+                appState.logoUrl = base64Img;
+                setLogoUI(base64Img);
+                db.ref('users/' + currentUser.uid).update({ logoUrl: base64Img });
+                if (appState.isAdmin) {
+                    db.ref('admin_config').update({ logoUrl: base64Img });
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setLogoUI(url) {
+            const imgEl = document.getElementById('outletLogoImg');
+            const txtEl = document.getElementById('outletLogoText');
+            if (url) {
+                imgEl.src = url;
+                imgEl.classList.remove('hidden');
+                txtEl.classList.add('hidden');
+            } else {
+                imgEl.classList.add('hidden');
+                txtEl.classList.remove('hidden');
+            }
+        }
+
+        function bukaMenuMaintenance() {
+            let pwd = prompt("Masukkan Sandi Maintenance:");
+            if (pwd === SECRET_MAINTENANCE_PASS) {
+                document.getElementById('maintenanceLockedView').classList.add('hidden');
+                document.getElementById('maintenanceUnlockedView').classList.remove('hidden');
+            } else if (pwd !== null) {
+                alert("Sandi salah!");
+            }
+        }
+
+        function tutupMenuMaintenance() {
+            document.getElementById('maintenanceUnlockedView').classList.add('hidden');
+            document.getElementById('maintenanceLockedView').classList.remove('hidden');
+        }
+
+        function hapusAkunDanDataFirebase() {
+            if (!currentUser) return;
+            let confirmMsg = confirm("PERINGATAN KRITIS: Akun dan seluruh data Anda di Firebase akan dihapus secara permanen. Lanjutkan?");
+            if (!confirmMsg) return;
+
+            let uid = currentUser.uid;
+            let promises = [
+                db.ref('users/' + uid).remove(),
+                db.ref('outlets/' + uid).remove()
+            ];
+
+            Promise.all(promises).then(() => {
+                currentUser.delete().then(() => {
+                    alert("Akun dan data berhasil dihapus permanen.");
+                }).catch(err => {
+                    alert("Gagal menghapus akun Auth: " + err.message + "\n(Mungkin Anda perlu login ulang terlebih dahulu).");
+                });
+            }).catch(err => {
+                alert("Gagal menghapus data database: " + err.message);
+            });
+        }
+
+        function bersihkanSampahDatabase() {
+            if (!appState.isAdmin) return;
+            if (!confirm("Apakah Anda yakin ingin membersihkan data dari akun/email yang sudah tidak terdaftar?")) return;
+
+            db.ref('users').once('value', userSnap => {
+                let activeUsers = userSnap.val() || {};
+                let validIds = Object.keys(activeUsers);
+
+                db.ref('outlets').once('value', outletSnap => {
+                    let outletsData = outletSnap.val() || {};
+                    let countRemoved = 0;
+
+                    Object.keys(outletsData).forEach(outletId => {
+                        if (!validIds.includes(outletId)) {
+                            db.ref(`outlets/${outletId}`).remove();
+                            countRemoved++;
+                        }
+                    });
+
+                    alert(`Pembersihan selesai! Berhasil menghapus ${countRemoved} data dari akun yang tidak terdaftar.`);
+                });
+            });
+        }
+
+        function backupDatabaseJson() {
+            db.ref().once('value', snapshot => {
+                let data = snapshot.val();
+                let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+                let downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `CRS_Backup_${new Date().toISOString().split('T')[0]}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            });
+        }
+
+        function restoreDatabaseJson(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let jsonData = JSON.parse(e.target.result);
+                    if (confirm("PERINGATAN: Memulihkan database akan menimpa seluruh data saat ini dengan data dari file cadangan. Lanjutkan?")) {
+                        db.ref().set(jsonData).then(() => {
+                            alert("Pemulihan data (Restore) berhasil dilakukan!");
+                        }).catch(err => {
+                            alert("Gagal memulihkan data: " + err.message);
+                        });
+                    }
+                } catch (err) {
+                    alert("Format file JSON tidak valid!");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function formatKonversiKemasan(pcs) {
+            const isi = appState.config.isiPerSatuan || 50;
+            const satuan = appState.config.satuanKemasan || 'Terpal';
+            const jumlahKemasan = (pcs / isi).toFixed(1);
+            return `${pcs} Pcs (${jumlahKemasan} ${satuan})`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('pTgl').value = today;
+            document.getElementById('exTgl').value = today;
+            document.getElementById('skTgl').value = today;
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('id-ID', options);
+        });
+
+        function switchTab(tabName) {
+            ['Dashboard', 'Penjualan', 'Aktivitas', 'Rekap', 'Pengaturan'].forEach(t => {
+                const el = document.getElementById('tab' + t);
+                if(el) el.classList.add('hidden');
+                const navBtn = document.getElementById('navTab' + t);
+                if(navBtn) {
+                    navBtn.classList.remove('text-blue-600');
+                    navBtn.classList.add('text-gray-400');
+                }
+            });
+            
+            const targetTab = document.getElementById('tab' + tabName);
+            if(targetTab) targetTab.classList.remove('hidden');
+            const activeNav = document.getElementById('navTab' + tabName);
+            if(activeNav) {
+                activeNav.classList.remove('text-gray-400');
+                activeNav.classList.add('text-blue-600');
+            }
+
+            if(tabName === 'Rekap') {
+                generateRekapFormat();
+            }
+        }
+
+        function toggleDrawer(isOpen) {
+            if (!appState.isAdmin) return;
+            const drawer = document.getElementById('slideDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            if (isOpen) {
+                loadOutletsList();
+                drawer.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                drawer.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function loadOutletsList() {
+            const listEl = document.getElementById('drawerOutletList');
+            listEl.innerHTML = `<p class="text-xs text-gray-500">Memuat daftar outlet...</p>`;
+
+            db.ref('users').once('value', snapshot => {
+                let usersVal = snapshot.val();
+                if (!usersVal) {
+                    listEl.innerHTML = `<p class="text-xs text-gray-400 italic">Belum ada outlet terdaftar.</p>`;
+                    return;
+                }
+                
+                listEl.innerHTML = `<p class="text-xs font-bold text-gray-700 mb-2">Outlet Terdaftar (Klik Mata Untuk Filter):</p>`;
+                
+                Object.keys(usersVal).forEach(uid => {
+                    let uData = usersVal[uid];
+                    if (!uData.isAdmin) {
+                        let namaOutlet = uData.outletName || `Outlet (${uid.substring(0,6)}...)`;
+                        let isCurrentInspected = appState.inspectingOutletId === uid;
+                        listEl.innerHTML += `
+                            <div class="p-2.5 border rounded-xl ${isCurrentInspected ? 'bg-amber-50 border-amber-300' : 'bg-gray-50'} flex justify-between items-center mb-2">
+                                <div>
+                                    <h4 class="font-bold text-xs text-gray-800">${namaOutlet}</h4>
+                                    <span class="text-[10px] ${isCurrentInspected ? 'text-amber-600 font-bold' : 'text-emerald-600 font-semibold'}">
+                                        ${isCurrentInspected ? '• Sedang Dipantau' : 'Aktif Terhubung'}
+                                    </span>
+                                </div>
+                                <button onclick="bukaDashboardOutletSpesifik('${uid}', '${namaOutlet}')" title="Tampilkan Data Outlet Ini Ke Dashboard" class="bg-blue-600 hover:bg-blue-700 text-white text-xs p-2 rounded-lg shadow transition">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+                });
+            });
+        }
+
+        function bukaDashboardOutletSpesifik(outletUid, outletName) {
+            appState.inspectingOutletId = outletUid;
+            appState.inspectingOutletName = outletName;
+
+            document.getElementById('headerOutletName').innerText = `${outletName} (Monitoring)`;
+            document.getElementById('inspectOutletNameDisplay').innerText = outletName;
+            document.getElementById('dashTitleText').innerText = `Kinerja: ${outletName}`;
+            document.getElementById('inspectBanner').classList.remove('hidden');
+
+            toggleDrawer(false);
+            processAdminDataView();
+            switchTab('Dashboard');
+        }
+
+        function keluarModeInspect() {
+            appState.inspectingOutletId = null;
+            appState.inspectingOutletName = '';
+
+            document.getElementById('headerOutletName').innerText = appState.currentOutlet || 'Pusat / Admin Utama';
+            document.getElementById('dashTitleText').innerText = 'Ringkasan Kinerja';
+            document.getElementById('inspectBanner').classList.add('hidden');
+
+            processAdminDataView();
+            syncDataFromDB();
+        }
+
+        function applyRoleUI() {
+            const badge = document.getElementById('headerRoleBadge');
+            const roleStatus = document.getElementById('roleStatusText');
+            const cardLaba = document.getElementById('cardLabaBersih');
+            const hamburgerBtn = document.getElementById('btnHamburger');
+            const outletStockPanel = document.getElementById('outletStockPanel');
+            const adminConversionPanel = document.getElementById('adminConversionPanel');
+            const adminMaintenanceSection = document.getElementById('adminMaintenanceSection');
+            
+            if (appState.isAdmin) {
+                badge.innerText = 'Mode Admin';
+                badge.className = 'text-xs bg-blue-700 px-2 py-0.5 rounded-full font-medium';
+                roleStatus.innerText = 'Status: Akses Admin Penuh';
+                cardLaba.style.display = 'block';
+                hamburgerBtn.style.display = 'block';
+                outletStockPanel.classList.add('hidden');
+                adminConversionPanel.classList.remove('hidden');
+                adminMaintenanceSection.classList.remove('hidden');
+            } else {
+                badge.innerText = 'Mode Outlet';
+                badge.className = 'text-xs bg-emerald-700 px-2 py-0.5 rounded-full font-medium';
+                roleStatus.innerText = 'Status: Akses Terbatas (Outlet)';
+                cardLaba.style.display = 'none'; 
+                hamburgerBtn.style.display = 'none'; 
+                outletStockPanel.classList.remove('hidden');
+                adminConversionPanel.classList.add('hidden');
+                adminMaintenanceSection.classList.add('hidden');
+            }
+            refreshDashboard();
+        }
+
+        function outletTambahStokPrompt() {
+            let stokSekarang = hitungStokAktifFisik();
+            let input = prompt(`Stok tersisa saat ini: ${stokSekarang} Pcs.\nMasukkan jumlah penambahan stok (Pcs):`, "1000");
+            if (input !== null) {
+                let addVal = parseFloat(input);
+                if (!isNaN(addVal) && addVal > 0) {
+                    appState.config.stokDelta += addVal;
+                    saveDataToDB();
+                    alert(`Berhasil menambahkan ${addVal} Pcs ke stok gudang outlet!`);
+                }
+            }
+        }
+
+        function adminAdjustStok(mode) {
+            let stokSekarang = hitungStokAktifFisik();
+            let actionName = mode === 'tambah' ? 'penambahan' : 'pengurangan';
+            let targetLabel = appState.inspectingOutletId ? `Outlet ${appState.inspectingOutletName}` : "Gudang Akumulasi Admin";
+            
+            let input = prompt(`Stok ${targetLabel} saat ini: ${stokSekarang} Pcs.\nMasukkan jumlah ${actionName} stok (Pcs):`, "1000");
+            if (input !== null) {
+                let val = parseFloat(input);
+                if (!isNaN(val) && val > 0) {
+                    if (mode === 'tambah') {
+                        appState.config.stokDelta += val;
+                    } else {
+                        if (val > stokSekarang) {
+                            alert("Jumlah pengurangan melebihi stok yang tersedia!");
+                            return;
+                        }
+                        appState.config.stokDelta -= val;
+                    }
+                    saveDataToDB();
+                    alert(`Stok ${targetLabel} berhasil diperbarui.`);
+                }
+            }
+        }
+
+        function hitungStokAktifFisik() {
+            let totalTerjual = 0;
+            let totalStokKeluarNet = 0;
+            let totalInitialStok = 0;
+
+            if (appState.isAdmin && !appState.inspectingOutletId) {
+                Object.values(appState.rawOutletsData).forEach(out => {
+                    totalInitialStok += (out.stokDelta || 0);
+                });
+                totalInitialStok += (appState.config.stokDelta || 0);
+            } else {
+                totalInitialStok = appState.config.stokDelta || 0;
+            }
+
+            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
+
+            listPenjualan.forEach(p => { totalTerjual += (p.terjual || 0); });
+            listAktivitas.forEach(a => {
+                if (a.tipe === 'stok_keluar') {
+                    if (a.subTipe === 'wr+') totalStokKeluarNet += (a.pcs || 0);
+                    else if (a.subTipe === 'wr-') totalStokKeluarNet -= (a.pcs || 0);
+                }
+            });
+
+            return Math.max(0, totalInitialStok - totalTerjual - totalStokKeluarNet);
+        }
+
+        function hitungKonversiBawa() {
+            const jumlahBawa = parseFloat(document.getElementById('pJumlahBawa').value) || 0;
+            const totalPcs = jumlahBawa * (appState.config.isiPerSatuan || 50);
+            document.getElementById('previewKonversiBawa').innerText = `Setara: ${totalPcs} Pcs`;
+        }
+
+        function simpanKonfigurasi() {
+            if (!appState.isAdmin) return;
+            appState.config.hargaPcs = parseFloat(document.getElementById('cfgHargaPcs').value) || 1200;
+            appState.config.satuanKemasan = document.getElementById('cfgSatuanKemasan').value;
+            appState.config.isiPerSatuan = parseFloat(document.getElementById('cfgIsiPerSatuan').value) || 50;
+            appState.config.manualLabaBarang = parseFloat(document.getElementById('cfgManualLabaBarang').value) || 0;
+            appState.config.manualLabaBersih = parseFloat(document.getElementById('cfgManualLabaBersih').value) || 0;
+            
+            document.getElementById('labelSatuanBawa').innerText = `Jumlah ${appState.config.satuanKemasan}`;
+            saveDataToDB();
+            alert('Pengaturan konversi & nilai laba berhasil disinkronkan ke seluruh outlet!');
+        }
+
+        function simpanIdentitasOutlet() {
+            const nama = document.getElementById('cfgNamaOutlet').value;
+            appState.currentOutlet = nama;
+            
+            if (!appState.inspectingOutletId) {
+                document.getElementById('headerOutletName').innerText = nama;
+            }
+            db.ref('users/' + currentUser.uid).update({ outletName: nama });
+            alert('Identitas outlet diperbarui!');
+        }
+
+        function verifikasiKodeAdmin() {
+            const kode = document.getElementById('inputAdminCode').value;
+            if (kode === '12345') {
+                appState.isAdmin = true;
+                db.ref('users/' + currentUser.uid).update({ isAdmin: true });
+                applyRoleUI();
+                alert('Akses Admin berhasil diaktifkan!');
+                document.getElementById('inputAdminCode').value = '';
+                switchTab('Dashboard');
+            } else {
+                alert('Kode Admin salah!');
+            }
+        }
+
+        function handlePenjualanSubmit(e) {
+            e.preventDefault();
+            const tgl = document.getElementById('pTgl').value;
+            const sales = document.getElementById('pSales').value;
+            const jmlBawaSatuan = parseFloat(document.getElementById('pJumlahBawa').value) || 0;
+            const sisaPcs = parseFloat(document.getElementById('pSisa').value) || 0;
+            
+            const bawaPcs = jmlBawaSatuan * (appState.config.isiPerSatuan || 50);
+            if (sisaPcs > bawaPcs) {
+                alert('Sisa barang tidak boleh melebihi jumlah barang yang dibawa!');
+                return;
+            }
+            
+            const terjualPcs = bawaPcs - sisaPcs;
+            const totalRp = terjualPcs * (appState.config.hargaPcs || 1200);
+            
+            if (!Array.isArray(appState.dataPenjualan)) appState.dataPenjualan = [];
+
+            appState.dataPenjualan.push({
+                no: appState.dataPenjualan.length + 1,
+                tgl,
+                sales,
+                bawaStr: `${jmlBawaSatuan} ${appState.config.satuanKemasan || 'Terpal'} (${bawaPcs} Pcs)`,
+                sisa: sisaPcs,
+                terjual: terjualPcs,
+                totalRp,
+                outlet: appState.currentOutlet
+            });
+            
+            document.getElementById('formPenjualan').reset();
+            document.getElementById('previewKonversiBawa').innerText = 'Setara: 0 Pcs';
+            saveDataToDB();
+            alert('Data penjualan berhasil disimpan secara real-time!');
+        }
+
+        function handlePengeluaranSubmit(e) {
+            e.preventDefault();
+            if (!Array.isArray(appState.dataAktivitas)) appState.dataAktivitas = [];
+
+            appState.dataAktivitas.push({
+                tipe: 'pengeluaran',
+                tgl: document.getElementById('exTgl').value,
+                keterangan: document.getElementById('exKet').value,
+                nominal: parseFloat(document.getElementById('exNominal').value) || 0,
+                sumber: document.getElementById('exSumber').value,
+                outlet: appState.currentOutlet
+            });
+            
+            document.getElementById('formPengeluaran').reset();
+            saveDataToDB();
+            alert('Pengeluaran berhasil dicatat!');
+        }
+
+        function handleStokKeluarSubmit(e) {
+            e.preventDefault();
+            if (!Array.isArray(appState.dataAktivitas)) appState.dataAktivitas = [];
+
+            appState.dataAktivitas.push({
+                tipe: 'stok_keluar',
+                subTipe: document.getElementById('skJenis').value,
+                tgl: document.getElementById('skTgl').value,
+                pcs: parseFloat(document.getElementById('skPcs').value) || 0,
+                keterangan: document.getElementById('skKet').value,
+                outlet: appState.currentOutlet
+            });
+            
+            document.getElementById('formStokKeluar').reset();
+            saveDataToDB();
+            alert('Aktivitas stok keluar berhasil dicatat!');
+        }
+
+        function renderTabelPenjualan() {
+            const tbody = document.getElementById('tablePenjualanBody');
+            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            
+            if (listPenjualan.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400 italic">Belum ada data penjualan</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            listPenjualan.forEach((item, index) => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2.5 font-medium">${index + 1}</td>
+                        <td class="p-2.5">${item.tgl}</td>
+                        <td class="p-2.5">${item.sales} <span class="block text-[9px] text-gray-400">(${item.outlet || 'Pusat'})</span></td>
+                        <td class="p-2.5">${item.bawaStr}</td>
+                        <td class="p-2.5">${item.sisa} Pcs</td>
+                        <td class="p-2.5 font-semibold text-blue-600">${item.terjual} Pcs</td>
+                        <td class="p-2.5 font-semibold text-emerald-600">Rp ${(item.totalRp || 0).toLocaleString('id-ID')}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderAktivitas() {
+            const container = document.getElementById('listAktivitasContainer');
+            let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
+
+            if (listAktivitas.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Belum ada riwayat aktivitas.</p>`;
+                return;
+            }
+            container.innerHTML = '';
+            listAktivitas.slice().reverse().forEach(act => {
+                let badgeColor = act.tipe === 'pengeluaran' ? 'text-red-600' : (act.subTipe === 'wr×' ? 'text-rose-600' : 'text-purple-600');
+                let sumberLabel = act.tipe === 'pengeluaran' ? ` (${act.sumber === 'laba_bersih' ? 'Potong Laba Bersih' : 'Potong Laba Barang'})` : '';
+                container.innerHTML += `
+                    <div class="p-2.5 rounded-lg border text-xs bg-gray-50 flex justify-between items-center">
+                        <div>
+                            <span class="font-bold ${badgeColor}">[${act.tipe === 'pengeluaran' ? 'Pengeluaran' : act.subTipe}]</span> 
+                            <span class="font-semibold">${act.keterangan}</span>${sumberLabel}
+                            <div class="text-[10px] text-gray-500">${act.tgl} | Outlet: ${act.outlet || 'Pusat'}</div>
+                        </div>
+                        <span class="font-bold ${badgeColor}">${act.tipe === 'pengeluaran' ? '-Rp ' + (act.nominal || 0).toLocaleString('id-ID') : (act.pcs || 0) + ' Pcs'}</span>
+                    </div>
+                `;
+            });
+        }
+
+        function refreshDashboard() {
+            let totalOmset = 0, totalTerjual = 0, totalPcsHilang = 0;
+            let totalPengeluaranLabaBersih = 0, totalPengeluaranLabaBarang = 0;
+
+            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
+
+            listPenjualan.forEach(p => { totalOmset += (p.totalRp || 0); totalTerjual += (p.terjual || 0); });
+            listAktivitas.forEach(a => {
+                if (a.tipe === 'pengeluaran') {
+                    if (a.sumber === 'laba_bersih') {
+                        totalPengeluaranLabaBersih += (a.nominal || 0);
+                    } else {
+                        totalPengeluaranLabaBarang += (a.nominal || 0);
+                    }
+                }
+                if (a.tipe === 'stok_keluar') {
+                    if (a.subTipe === 'wr×') totalPcsHilang += (a.pcs || 0);
+                }
+            });
+
+            const manualLabaBrg = appState.config.manualLabaBarang || 0;
+            const manualLabaBrs = appState.config.manualLabaBersih || 0;
+
+            const labaBarangKotor = Math.max(0, (totalTerjual * manualLabaBrg) - totalPengeluaranLabaBarang);
+            const labaBersih = Math.max(0, (totalTerjual * manualLabaBrs) - totalPengeluaranLabaBersih);
+            const nominalKerugianHilang = totalPcsHilang * manualLabaBrg;
+            const stokAkhir = hitungStokAktifFisik();
+
+            document.getElementById('dashOmset').innerText = `Rp ${totalOmset.toLocaleString('id-ID')}`;
+            document.getElementById('dashLabaBersih').innerText = `Rp ${labaBersih.toLocaleString('id-ID')}`;
+            document.getElementById('dashLabaBarang').innerText = `Rp ${labaBarangKotor.toLocaleString('id-ID')}`;
+            document.getElementById('dashStok').innerText = `${stokAkhir} Pcs`;
+            document.getElementById('dashBarangHilang').innerText = `${totalPcsHilang} Pcs`;
+            document.getElementById('dashNominalHilang').innerText = `Rp ${nominalKerugianHilang.toLocaleString('id-ID')} (Kerugian)`;
+            document.getElementById('dashTerjual').innerText = `${totalTerjual} Pcs`;
+            
+            const outletDisplay = document.getElementById('outletDisplayStok');
+            if (outletDisplay) outletDisplay.innerText = `${stokAkhir} Pcs`;
+        }
+
+        function generateRekapFormat() {
+            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
+
+            let totalOmset = 0, totalTerjual = 0, totalPcsHilang = 0;
+            let totalPengeluaranLabaBersih = 0, totalPengeluaranLabaBarang = 0;
+            let countWrPlus = 0, pcsWrPlus = 0;
+            let countWrX = 0, pcsWrX = 0;
+            let countWrMin = 0;
+
+            listPenjualan.forEach(p => {
+                totalOmset += (p.totalRp || 0);
+                totalTerjual += (p.terjual || 0);
+            });
+
+            listAktivitas.forEach(a => {
+                if (a.tipe === 'pengeluaran') {
+                    if (a.sumber === 'laba_bersih') totalPengeluaranLabaBersih += (a.nominal || 0);
+                    else totalPengeluaranLabaBarang += (a.nominal || 0);
+                } else if (a.tipe === 'stok_keluar') {
+                    if (a.subTipe === 'wr+') { countWrPlus++; pcsWrPlus += (a.pcs || 0); }
+                    else if (a.subTipe === 'wr×') { countWrX++; pcsWrX += (a.pcs || 0); totalPcsHilang += (a.pcs || 0); }
+                    else if (a.subTipe === 'wr-') { countWrMin++; }
+                }
+            });
+
+            const manualLabaBrg = appState.config.manualLabaBarang || 0;
+            const manualLabaBrs = appState.config.manualLabaBersih || 0;
+            const labaBarangKotor = (totalTerjual * manualLabaBrg) - totalPengeluaranLabaBarang;
+            const labaBersih = (totalTerjual * manualLabaBrs) - totalPengeluaranLabaBersih;
+            const stokAkhir = hitungStokAktifFisik();
+
+            let formatStr = `=== REKAPITULASI KINERJA RETAIL CRS ===\n`;
+            formatStr += `Outlet / Cabang : ${appState.currentOutlet}\n`;
+            formatStr += `Tanggal Cetak   : ${new Date().toLocaleString('id-ID')}\n`;
+            formatStr += `----------------------------------------\n\n`;
+
+            formatStr += `1. KEUANGAN & KINERJA\n`;
+            formatStr += `   - Total Omset       : Rp ${totalOmset.toLocaleString('id-ID')}\n`;
+            formatStr += `   - Laba Barang       : Rp ${labaBarangKotor.toLocaleString('id-ID')}\n`;
+            formatStr += `   - Laba Bersih       : Rp ${labaBersih.toLocaleString('id-ID')}\n`;
+            formatStr += `   - Total Pengeluaran : Rp ${(totalPengeluaranLabaBersih + totalPengeluaranLabaBarang).toLocaleString('id-ID')}\n\n`;
+
+            formatStr += `2. STOK & PENJUALAN\n`;
+            formatStr += `   - Barang Terjual    : ${totalTerjual} Pcs\n`;
+            formatStr += `   - Stok Gudang Sisa  : ${stokAkhir} Pcs\n\n`;
+
+            formatStr += `3. AKTIVITAS WARUNG (WR)\n`;
+            formatStr += `   - Wr+ (Tambah)      : ${formatKonversiKemasan(pcsWrPlus)}\n`;
+            formatStr += `   - Wr× (Hilang)      : ${formatKonversiKemasan(pcsWrX)}\n`;
+            formatStr += `   - Wr- (Retur/Stop)  : ${countWrMin} Warung\n`;
+
+            document.getElementById('rekapTextArea').value = formatStr;
+        }
+
+        function copyRekapText() {
+            const textarea = document.getElementById('rekapTextArea');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Teks rekap berhasil disalin!');
+        }
+
+        function downloadRekapTxt() {
+            const textContent = document.getElementById('rekapTextArea').value;
+            let blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+            let url = URL.createObjectURL(blob);
+            let anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = `Rekap_CRS_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+        }
+    </script>
+
+    <!-- Registrasi Service Worker PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('PWA ServiceWorker terdaftar:', reg.scope))
+                    .catch(err => console.log('Gagal mendaftar ServiceWorker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
