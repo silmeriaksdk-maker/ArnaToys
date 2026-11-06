@@ -1,5 +1,5 @@
 // Naikkan nama versi cache ini (misal: crs-pwa-v2, crs-pwa-v3) setiap kali Anda melakukan update kode
-const CACHE_NAME = 'crs-pwa-v2';
+const CACHE_NAME = 'ArnaToys-pwa-v1';
 
 const urlsToCache = [
   './',
