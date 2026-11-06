@@ -1352,13 +1352,29 @@
         }
     </script>
 
-    <!-- Registrasi Service Worker PWA -->
+    <!-- Registrasi & Auto-Update Service Worker PWA -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('PWA ServiceWorker terdaftar:', reg.scope))
-                    .catch(err => console.log('Gagal mendaftar ServiceWorker:', err));
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('PWA ServiceWorker terdaftar:', reg.scope);
+                    
+                    // Cek pembaruan saat pengguna kembali membuka halaman
+                    reg.update();
+
+                    // Tangani pembaruan Service Worker secara otomatis
+                    reg.onupdatefound = () => {
+                        const installingWorker = reg.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    console.log('Versi baru ditemukan. Memuat ulang aplikasi...');
+                                    window.location.reload();
+                                }
+                            }
+                        };
+                    };
+                }).catch(err => console.log('Gagal mendaftar ServiceWorker:', err));
             });
         }
     </script>
