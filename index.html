@@ -460,6 +460,15 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- PANEL LISENSI & LEGALITAS APLIKASI (DITEMPATKAN DI PALING BAWAH PENGATURAN) -->
+                <div class="bg-gradient-to-br from-slate-50 to-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm space-y-3">
+                    <h3 class="text-xs font-bold text-blue-900 uppercase border-b border-blue-200 pb-2"><i class="fa-solid fa-file-contract text-blue-600 mr-1"></i> Lisensi & Legalitas Aplikasi</h3>
+                    <p class="text-xs text-gray-600">Arna Toys[span_1](start_span)[span_1](end_span) - Konsinyasi & Sistem Retail (CRS)[span_2](start_span)[span_2](end_span) dikembangkan oleh <strong>Deri Septian Maulana</strong>.</p>
+                    <button onclick="toggleLicenseModal(true)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs py-2.5 rounded-lg shadow transition flex items-center justify-center">
+                        <i class="fa-solid fa-eye mr-1.5"></i> Lihat Perjanjian Lisensi Pengguna (EULA)
+                    </button>
+                </div>
             </section>
 
         </main>
@@ -507,6 +516,49 @@
 
     </div>
 
+    <!-- MODAL POPUP LISENSI (EULA) -->
+    <div id="licenseModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-file-contract mr-1.5"></i> Perjanjian Lisensi Pengguna Akhir (EULA)</h3>
+                <button onclick="toggleLicenseModal(false)" class="p-1.5 text-white hover:bg-blue-700 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-3 text-xs text-gray-700 leading-relaxed font-sans">
+                <div class="text-center pb-2 border-b">
+                    <h4 class="font-bold text-gray-900 text-sm">ARNA TOYS - CRS (Consignment Retail System)</h4>
+                    <p class="text-blue-600 font-semibold mt-0.5">Pembuat / Pengembang: Deri Septian Maulana</p>
+                    <span class="inline-block bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">Lisensi Penggunaan Perorangan</span>
+                </div>
+
+                <p>Perjanjian Lisensi Pengguna Akhir ("EULA") ini adalah perjanjian hukum antara Anda (selaku Pengguna Perorangan) dengan <strong>Deri Septian Maulana</strong> selaku pencipta dan pemegang hak cipta tunggal atas aplikasi PWA <strong>Arna Toys</strong> dalam proyek <strong>CRS (Consignment Retail System)</strong>[span_3](start_span)[span_3](end_span).</p>
+                
+                <h5 class="font-bold text-gray-900 mt-2">1. Pemberian Lisensi</h5>
+                <p>Dengan menginstal, mengakses, atau menggunakan aplikasi Arna Toys[span_4](start_span)[span_4](end_span), Anda diberikan lisensi non-eksklusif, tidak dapat dialihkan, dan terbatas untuk menggunakan aplikasi ini semata-mata guna membantu penghitungan dan pemantauan usaha perorangan Anda.</p>
+
+                <h5 class="font-bold text-gray-900 mt-2">2. Batasan Penggunaan</h5>
+                <p>Anda <strong>TIDAK</strong> diizinkan untuk:</p>
+                <ul class="list-disc pl-4 space-y-1">
+                    <li>Menjual kembali, menyewakan, meminjamkan, mendistribusikan, atau mensublisensikan aplikasi ini kepada pihak lain tanpa izin tertulis dari Pembuat.</li>
+                    <li>Melakukan dekompilasi, <i>reverse engineering</i>, membongkar, atau mencoba mengekstrak kode sumber aplikasi.</li>
+                    <li>Menghapus atau mengubah atribut hak cipta, nama pembuat (Deri Septian Maulana), atau identitas proyek CRS pada aplikasi.</li>
+                </ul>
+
+                <h5 class="font-bold text-gray-900 mt-2">3. Hak Kekayaan Intelektual</h5>
+                <p>Seluruh hak cipta, hak milik intelektual, desain antarmuka, dan kode sumber aplikasi Arna Toys / CRS[span_5](start_span)[span_5](end_span) sepenuhnya adalah milik mutlak dari <strong>Deri Septian Maulana</strong>.</p>
+
+                <h5 class="font-bold text-gray-900 mt-2">4. Penafian Jaminan</h5>
+                <p>Aplikasi ini disediakan "sebagaimana adanya" tanpa jaminan apa pun, baik tersurat maupun tersirat. Pembuat tidak bertanggung jawab atas kerugian finansial, kehilangan data, atau kerusakan yang timbul akibat penggunaan atau ketidakmampuan menggunakan aplikasi ini.</p>
+            </div>
+            <div class="p-3 border-t bg-gray-50 flex justify-end">
+                <button onclick="toggleLicenseModal(false)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg font-medium transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- FIREBASE INITIALIZATION & SCRIPT TEROPTIMASI -->
     <script>
         const firebaseConfig = {
@@ -547,6 +599,16 @@
             dataAktivitas: []
         };
 
+        // FUNGSI TOGGLE MODAL LISENSI
+        function toggleLicenseModal(isOpen) {
+            const modal = document.getElementById('licenseModal');
+            if (isOpen) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
         // FUNGSI MEMUTAR NADA KHAS UANG MASUK (CHA-CHING SOUND)
         function playCashSound() {
             try {
@@ -567,7 +629,6 @@
                     osc.stop(audioCtx.currentTime + startTime + duration);
                 };
 
-                // Suara dentingan koin khas uang masuk (B5 -> E6 -> C7)
                 playTone(987.77, 0, 0.15);
                 playTone(1318.51, 0.1, 0.25);
                 playTone(2093.00, 0.2, 0.4);
@@ -689,7 +750,6 @@
                     if (outVal) {
                         let newPenjualan = outVal.penjualan ? (Array.isArray(outVal.penjualan) ? outVal.penjualan : Object.values(outVal.penjualan)) : [];
                         
-                        // Cek jika omset bertambah dari transaksi baru di database
                         if (lastPenjualanCount !== -1 && newPenjualan.length > lastPenjualanCount) {
                             playCashSound();
                         }
@@ -1189,7 +1249,6 @@
             document.getElementById('previewKonversiBawa').innerText = 'Setara: 0 Pcs';
             saveDataToDB();
             
-            // Pemicu Suara Uang Masuk Saat Penjualan Berhasil Disimpan
             playCashSound();
             
             alert('Data penjualan berhasil disimpan secara real-time!');
