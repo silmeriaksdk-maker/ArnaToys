@@ -63,7 +63,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Password (Min. 6 karakter)</label>
-                    <input type="password" id="regPassword" required placeholder="••••••••" class="w-full text-sm border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <input type="password" id="regPassword" required placeholder="••••••••" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Outlet / Cabang</label>
@@ -479,6 +479,22 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- PANEL RESET PASSWORD GLOBAL ADMIN (FITUR BARU KHUSUS ADMIN) -->
+                    <div id="panelResetPasswordGlobal" class="bg-gradient-to-br from-rose-50 to-amber-50 border border-rose-200 rounded-xl p-4 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between border-b border-rose-200 pb-2">
+                            <h3 class="text-xs font-bold text-rose-800 uppercase flex items-center">
+                                <i class="fa-solid fa-shield-virus mr-1.5 text-rose-600"></i> Reset Password Global (Admin Only)
+                            </h3>
+                            <span class="text-[10px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-full">Otorisasi WA</span>
+                        </div>
+                        <p class="text-xs text-gray-600 leading-relaxed">
+                            Fitur darurat untuk mereset password akun Admin sekaligus memperbarui kredensial seluruh outlet melalui verifikasi OTP resmi WhatsApp.
+                        </p>
+                        <button type="button" onclick="bukaModalResetGlobal()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs py-2.5 rounded-lg shadow transition flex items-center justify-center">
+                            <i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> Mulai Reset Password Global
+                        </button>
+                    </div>
                 </div>
 
                 <!-- MENU MAINTENANCE TERPROTEKSI -->
@@ -713,6 +729,69 @@
         </div>
     </div>
 
+    <!-- MODAL RESET PASSWORD GLOBAL & OTP FONNTE (BARU) -->
+    <div id="globalResetModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-gray-100 relative">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-sm text-gray-800 flex items-center">
+                    <i class="fa-solid fa-key text-rose-600 mr-2"></i> Reset Password Global
+                </h3>
+                <button onclick="tutupModalResetGlobal()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- TAHAP 1: INPUT NOMOR WHATSAPP -->
+            <div id="stepRequestOtp" class="space-y-3">
+                <p class="text-xs text-gray-500">Masukkan nomor WhatsApp terdaftar Admin untuk menerima kode verifikasi OTP.</p>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Nomor WhatsApp</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-400 text-xs"><i class="fa-brands fa-whatsapp"></i></span>
+                        <input type="tel" id="otpPhoneInput" placeholder="Contoh: 08123456789" class="w-full text-sm border border-gray-300 rounded-lg pl-8 p-2.5 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                    </div>
+                </div>
+                <button type="button" id="btnKirimOtp" onclick="prosesKirimOtp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs py-2.5 rounded-lg shadow transition flex items-center justify-center">
+                    <i class="fa-solid fa-paper-plane mr-1.5"></i> Kirim Kode OTP via WA
+                </button>
+            </div>
+
+            <!-- TAHAP 2: VERIFIKASI KODE OTP -->
+            <div id="stepVerifyOtp" class="space-y-3 hidden">
+                <div class="bg-blue-50 border border-blue-200 text-blue-800 text-[11px] p-2.5 rounded-lg">
+                    Kode verifikasi telah dikirim ke WhatsApp <b id="displayTargetPhone">-</b>.
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Masukkan 6 Digit OTP</label>
+                    <input type="text" id="otpCodeInput" maxlength="6" placeholder="123456" class="w-full text-center tracking-widest text-lg font-bold border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <div class="flex justify-between items-center text-[10px] text-gray-400 mt-1">
+                        <span id="otpCountdownText">Masa berlaku: 02:00</span>
+                        <button type="button" onclick="prosesKirimOtp()" id="btnResendOtp" class="text-blue-600 font-semibold hover:underline hidden">Kirim Ulang</button>
+                    </div>
+                </div>
+                <button type="button" onclick="prosesVerifikasiOtp()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs py-2.5 rounded-lg shadow transition">
+                    Verifikasi OTP
+                </button>
+            </div>
+
+            <!-- TAHAP 3: INPUT PASSWORD BARU GLOBAL -->
+            <div id="stepNewPassword" class="space-y-3 hidden">
+                <p class="text-xs text-gray-500">OTP berhasil diverifikasi. Masukkan password baru untuk diterapkan secara global.</p>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Password Baru (Min. 6 Karakter)</label>
+                    <input type="password" id="globalNewPassword" placeholder="••••••••" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Konfirmasi Password Baru</label>
+                    <input type="password" id="globalConfirmPassword" placeholder="••••••••" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                </div>
+                <button type="button" id="btnSubmitNewPassword" onclick="eksekusiResetPasswordGlobal()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs py-2.5 rounded-lg shadow transition flex items-center justify-center">
+                    <i class="fa-solid fa-floppy-disk mr-1.5"></i> Simpan Password Global
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT LOGIC -->
     <script>
         const firebaseConfig = {
@@ -764,6 +843,14 @@
         };
 
         let selectedModalSeason = null;
+
+        // STATE OTP RESET GLOBAL
+        let otpData = {
+            code: null,
+            targetPhone: '',
+            expiresAt: 0,
+            timerInterval: null
+        };
 
         function toggleLicenseModal(isOpen) {
             document.getElementById('licenseModal').classList.toggle('hidden', !isOpen);
@@ -1277,6 +1364,7 @@
             const adminTableActions = document.getElementById('adminTableActions');
             const thActionPenjualan = document.getElementById('thActionPenjualan');
             const adminEndSeasonAction = document.getElementById('adminEndSeasonAction');
+            const panelResetGlobal = document.getElementById('panelResetPasswordGlobal');
 
             // CARD FORM INPUT
             const cardPenjualanInput = document.getElementById('cardPenjualanInputContainer');
@@ -1294,6 +1382,7 @@
                 adminTableActions.classList.remove('hidden');
                 thActionPenjualan.classList.remove('hidden');
                 adminEndSeasonAction.classList.remove('hidden');
+                if (panelResetGlobal) panelResetGlobal.classList.remove('hidden');
 
                 // JIKA ADMIN SEDANG MEMANTAU OUTLET TERTENTU: TAMPILKAN INPUT
                 // JIKA BERADA DI PUSAT (SEMUA OUTLET): SEMBUNYIKAN INPUT
@@ -1316,6 +1405,7 @@
                 adminTableActions.classList.add('hidden');
                 thActionPenjualan.classList.add('hidden');
                 adminEndSeasonAction.classList.add('hidden');
+                if (panelResetGlobal) panelResetGlobal.classList.add('hidden');
 
                 // Outlet biasa selalu memiliki form input
                 cardPenjualanInput.classList.remove('hidden');
@@ -1769,7 +1859,6 @@
             return formatStr;
         }
 
-        // PERBAIKAN: END SEASON MENYIMPAN TRANSAKSI SECARA PERMANEN UNTUK GRAFIK CANDLE
         function handleEndSeasonPrompt() {
             if (!appState.isAdmin) {
                 alert("Hanya Admin yang dapat mengoperasikan End Season!");
@@ -1814,7 +1903,7 @@
                 rekapText: finalRekapText,
                 omsetStr: document.getElementById('dashOmset').innerText,
                 terjualStr: document.getElementById('dashTerjual').innerText,
-                penjualanSnapshot: listPenjualan // Disimpan agar grafik Candle tetap abadi
+                penjualanSnapshot: listPenjualan
             };
 
             db.ref('seasons').push(seasonRecord).then(() => {
@@ -1822,7 +1911,6 @@
                     let allOutlets = snapshot.val() || {};
                     let updates = {};
 
-                    // Reset transaksi per-outlet dan set sisa stok fisik riil
                     Object.keys(allOutlets).forEach(uid => {
                         let out = allOutlets[uid];
                         let currentStokGudang = out.stokDelta || 0;
@@ -1847,7 +1935,6 @@
                         updates[`outlets/${uid}/stokDelta`] = sisaStokFisik;
                     });
 
-                    // PERBAIKAN STOK DOUBLE: Admin config stokDelta diatur 0 agar tidak menggandakan stok outlet
                     updates['admin_config/stokDelta'] = 0;
 
                     db.ref().update(updates).then(() => {
@@ -1958,11 +2045,9 @@
             startCandleAnimation();
         }
 
-        // MENGUMPULKAN SELURUH DATA TRANSAKSI PENJUALAN (TERMASUK ARSIP SEASON)
         function getAllPenjualanIncludingHistorical() {
             let combined = [];
 
-            // 1. Data dari Season-season sebelumnya (History)
             if (Array.isArray(appState.seasons)) {
                 appState.seasons.forEach(s => {
                     if (s.penjualanSnapshot && Array.isArray(s.penjualanSnapshot)) {
@@ -1971,7 +2056,6 @@
                 });
             }
 
-            // 2. Data dari Season yang sedang berjalan aktif
             let listAktif = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
             combined = combined.concat(listAktif);
 
@@ -2015,7 +2099,6 @@
 
             const allPenjualan = getAllPenjualanIncludingHistorical();
 
-            // Hitung akumulasi untuk kartu di bawah papan candle
             let totalPcs = 0, totalOmset = 0;
             allPenjualan.forEach(p => {
                 totalPcs += (p.terjual || 0);
@@ -2032,7 +2115,6 @@
             document.getElementById('candleTotalLbMurni').innerText = `Rp ${totalLbMurni.toLocaleString('id-ID')}`;
             document.getElementById('candleTotalLabaBarang').innerText = `Rp ${totalLbKotor.toLocaleString('id-ID')}`;
 
-            // PENGELOMPOKAN DATA
             let groupedMap = {};
             const tf = candleState.timeframe;
 
@@ -2125,7 +2207,6 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // GRID LATAR
             ctx.strokeStyle = '#1E293B';
             ctx.lineWidth = 1;
             const gridLines = 4;
@@ -2143,7 +2224,6 @@
                 ctx.fillText(Math.round(valAtGrid).toLocaleString('id-ID'), 30, y + 3);
             }
 
-            // RENDERING CANDLE DENGAN EASE ANIMASI
             const chartAreaWidth = width - 65;
             const step = chartAreaWidth / candles.length;
             const candleWidth = Math.max(8, Math.min(22, step * 0.6));
@@ -2163,13 +2243,11 @@
                 let targetYOpen = getY(c.open);
                 let targetYClose = getY(c.close);
 
-                // Penerapan Interpolasi Animasi (Lerp)
                 let yHigh = baseY - (baseY - targetYHigh) * progress;
                 let yLow = baseY - (baseY - targetYLow) * progress;
                 let yOpen = baseY - (baseY - targetYOpen) * progress;
                 let yClose = baseY - (baseY - targetYClose) * progress;
 
-                // Gambar Garis Sumbu (Wick)
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -2177,7 +2255,6 @@
                 ctx.lineTo(cx, yLow);
                 ctx.stroke();
 
-                // Gambar Badan Lilin (Body)
                 let bodyTop = Math.min(yOpen, yClose);
                 let bodyHeight = Math.max(3, Math.abs(yClose - yOpen));
 
@@ -2185,9 +2262,8 @@
                 ctx.shadowColor = color;
                 ctx.shadowBlur = 6;
                 ctx.fillRect(cx - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
-                ctx.shadowBlur = 0; // reset shadow
+                ctx.shadowBlur = 0;
 
-                // Simpan koordinat untuk event klik
                 candleState.candles.push({
                     x: cx - candleWidth / 2 - 4,
                     y: yHigh,
@@ -2197,7 +2273,6 @@
                     isUp
                 });
 
-                // Label Sumbu X
                 ctx.fillStyle = '#94A3B8';
                 ctx.font = '9px sans-serif';
                 ctx.textAlign = 'center';
@@ -2206,7 +2281,6 @@
             });
         }
 
-        // EVENT KLIK PADA CANDLE UNTUK MEMUNCULKAN DETAIL LENGKAP
         function handleCandleCanvasClick(event) {
             const canvas = document.getElementById('candleCanvas');
             const rect = canvas.getBoundingClientRect();
@@ -2230,6 +2304,183 @@
                 dot.className = clicked.isUp ? 'w-3 h-3 rounded-full bg-emerald-500' : 'w-3 h-3 rounded-full bg-rose-500';
 
                 toggleCandleDetailModal(true);
+            }
+        }
+
+        // ================= LOGIKA RESET PASSWORD GLOBAL & INTEGRASI FONNTE ================= //
+        async function kirimOtpFonnte(nomorTujuan, kodeOtp) {
+            const token = 'GMUYJNJdWNjKqHDzKxsB';
+            const url = 'https://api.fonnte.com/send';
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': token,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'target': nomorTujuan,
+                    'message': `Kode verifikasi OTP Anda adalah: ${kodeOtp}`,
+                }),
+            });
+
+            const data = await response.json();
+            return data;
+        }
+
+        function bukaModalResetGlobal() {
+            if (!appState.isAdmin) {
+                alert("Akses Ditolak: Hanya Admin yang dapat melakukan tindakan ini!");
+                return;
+            }
+            document.getElementById('stepRequestOtp').classList.remove('hidden');
+            document.getElementById('stepVerifyOtp').classList.add('hidden');
+            document.getElementById('stepNewPassword').classList.add('hidden');
+            document.getElementById('otpPhoneInput').value = '';
+            document.getElementById('otpCodeInput').value = '';
+            document.getElementById('globalNewPassword').value = '';
+            document.getElementById('globalConfirmPassword').value = '';
+            
+            document.getElementById('globalResetModal').classList.remove('hidden');
+        }
+
+        function tutupModalResetGlobal() {
+            if (otpData.timerInterval) clearInterval(otpData.timerInterval);
+            document.getElementById('globalResetModal').classList.add('hidden');
+        }
+
+        async function prosesKirimOtp() {
+            let rawPhone = document.getElementById('otpPhoneInput').value.trim();
+            if (!rawPhone) {
+                alert("Harap masukkan nomor WhatsApp!");
+                return;
+            }
+
+            let formattedPhone = rawPhone.replace(/\D/g, '');
+            if (formattedPhone.startsWith('0')) {
+                formattedPhone = '62' + formattedPhone.slice(1);
+            }
+
+            const btn = document.getElementById('btnKirimOtp');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Mengirim OTP...`;
+
+            const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            otpData.code = generatedOtp;
+            otpData.targetPhone = formattedPhone;
+            otpData.expiresAt = Date.now() + (2 * 60 * 1000); // Masa berlaku 2 menit
+
+            try {
+                const res = await kirimOtpFonnte(formattedPhone, generatedOtp);
+                if (res && res.status) {
+                    document.getElementById('stepRequestOtp').classList.add('hidden');
+                    document.getElementById('stepVerifyOtp').classList.remove('hidden');
+                    document.getElementById('displayTargetPhone').innerText = formattedPhone;
+                    mulaiTimerOtp(120);
+                } else {
+                    alert("Gagal mengirim OTP: " + (res.reason || "Terjadi gangguan pada gateway WA."));
+                }
+            } catch (err) {
+                alert("Kesalahan jaringan saat memanggil Fonnte API: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1.5"></i> Kirim Kode OTP via WA`;
+            }
+        }
+
+        function mulaiTimerOtp(durasiDetik) {
+            let timeLeft = durasiDetik;
+            const countDisplay = document.getElementById('otpCountdownText');
+            const resendBtn = document.getElementById('btnResendOtp');
+            resendBtn.classList.add('hidden');
+
+            if (otpData.timerInterval) clearInterval(otpData.timerInterval);
+
+            otpData.timerInterval = setInterval(() => {
+                timeLeft--;
+                const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+                const s = String(timeLeft % 60).padStart(2, '0');
+                countDisplay.innerText = `Masa berlaku: ${m}:${s}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(otpData.timerInterval);
+                    countDisplay.innerText = `OTP kedaluwarsa.`;
+                    resendBtn.classList.remove('hidden');
+                    otpData.code = null;
+                }
+            }, 1000);
+        }
+
+        function prosesVerifikasiOtp() {
+            const inputOtp = document.getElementById('otpCodeInput').value.trim();
+            if (!otpData.code || Date.now() > otpData.expiresAt) {
+                alert("Kode OTP sudah kedaluwarsa. Silakan minta kode baru!");
+                return;
+            }
+
+            if (inputOtp !== otpData.code) {
+                alert("Kode OTP tidak valid! Silakan periksa kembali pesan WhatsApp Anda.");
+                return;
+            }
+
+            if (otpData.timerInterval) clearInterval(otpData.timerInterval);
+            document.getElementById('stepVerifyOtp').classList.add('hidden');
+            document.getElementById('stepNewPassword').classList.remove('hidden');
+        }
+
+        async function eksekusiResetPasswordGlobal() {
+            const pass1 = document.getElementById('globalNewPassword').value;
+            const pass2 = document.getElementById('globalConfirmPassword').value;
+
+            if (!pass1 || pass1.length < 6) {
+                alert("Password minimal harus 6 karakter!");
+                return;
+            }
+
+            if (pass1 !== pass2) {
+                alert("Konfirmasi password tidak cocok!");
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitNewPassword');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Memperbarui Seluruh Akun...`;
+
+            try {
+                // 1. Update password otentikasi Firebase pada user Admin yang sedang login
+                if (currentUser) {
+                    await currentUser.updatePassword(pass1);
+                }
+
+                // 2. Simpan jejak security update & sinkronisasi password global ke Realtime Database
+                const updatePayload = {
+                    'system_security/lastPasswordReset': new Date().toISOString(),
+                    'system_security/resetBy': currentUser ? currentUser.email : 'Admin',
+                    'system_security/targetPhone': otpData.targetPhone,
+                    'system_security/globalPassword': pass1
+                };
+
+                // 3. Update field password referensi pada seluruh pengguna di database
+                const usersSnap = await db.ref('users').once('value');
+                const usersData = usersSnap.val() || {};
+                Object.keys(usersData).forEach(uid => {
+                    updatePayload[`users/${uid}/assignedPassword`] = pass1;
+                    updatePayload[`users/${uid}/mustRelogin`] = true;
+                });
+
+                await db.ref().update(updatePayload);
+
+                alert("Sukses! Password Admin berhasil diubah dan disinkronkan ke seluruh outlet.");
+                tutupModalResetGlobal();
+            } catch (err) {
+                if (err.code === 'auth/requires-recent-login') {
+                    alert("Demi keamanan Firebase, silakan logout lalu login kembali sebelum mereset password akun.");
+                } else {
+                    alert("Gagal mereset password: " + err.message);
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-floppy-disk mr-1.5"></i> Simpan Password Global`;
             }
         }
     </script>
