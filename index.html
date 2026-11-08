@@ -30,7 +30,7 @@
         <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
             <div class="text-center mb-6">
                 <div class="w-24 h-24 mx-auto mb-3 relative flex items-center justify-center">
-                    <img src="148979.png" alt="Arna Toys Logo" class="w-full h-full object-contain rounded-2xl drop-shadow-md">
+                    <img src="148979.png" alt="Arna Toys Logo" class="w-full h-full object-contain rounded-2xl drop-shadow-md" onerror="this.src='https://placehold.co/96x96?text=ArnaToys'">
                 </div>
                 <h1 class="text-2xl font-bold text-gray-900">Arna Toys</h1>
                 <span class="inline-block bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">Versi V 1.0</span>
@@ -190,8 +190,14 @@
                 </form>
 
                 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mt-4">
-                    <div class="p-3 bg-gray-50 border-b border-gray-200">
+                    <div class="p-3 bg-gray-50 border-b border-gray-200 flex flex-wrap justify-between items-center gap-2">
                         <h3 class="text-xs font-bold text-gray-700 uppercase">Riwayat Tabel Penjualan</h3>
+                        <!-- Tombol Download XLS (Khusus Admin) -->
+                        <div id="adminTableActions" class="hidden">
+                            <button onclick="downloadPenjualanXls()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition flex items-center">
+                                <i class="fa-solid fa-file-excel mr-1.5"></i> Unduh Tabel (XLS)
+                            </button>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs">
@@ -204,11 +210,12 @@
                                     <th class="p-2.5">Sisa</th>
                                     <th class="p-2.5">Terjual</th>
                                     <th class="p-2.5">Total Rp</th>
+                                    <th id="thActionPenjualan" class="p-2.5 text-center hidden">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tablePenjualanBody" class="divide-y divide-gray-200 text-gray-700">
                                 <tr>
-                                    <td colspan="7" class="p-4 text-center text-gray-400 italic">Belum ada data penjualan</td>
+                                    <td colspan="8" class="p-4 text-center text-gray-400 italic">Belum ada data penjualan</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -287,31 +294,114 @@
                 </div>
             </section>
 
-            <!-- TAB 4: REKAP LAPORAN -->
-            <section id="tabRekap" class="p-4 md:p-6 space-y-4 hidden">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-gray-800">Format Rekap Laporan</h2>
-                    <button onclick="generateRekapFormat()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
-                        <i class="fa-solid fa-sync mr-1"></i> Perbarui Rekap
-                    </button>
+            <!-- TAB 4: CANDLE (FITUR BARU) -->
+            <section id="tabCandle" class="p-4 md:p-6 space-y-4 hidden">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-chart-column text-blue-600 mr-1.5"></i> Candle Penjualan</h2>
+                        <p class="text-xs text-gray-500">Visualisasi tren penjualan ritel dalam bentuk candlestick.</p>
+                    </div>
+                    <!-- Pilihan Timeframe -->
+                    <div class="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold">
+                        <button onclick="setCandleTimeframe('hari')" id="btnTfHari" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow">Hari</button>
+                        <button onclick="setCandleTimeframe('minggu')" id="btnTfMinggu" class="px-2.5 py-1 rounded-lg text-gray-600">Minggu</button>
+                        <button onclick="setCandleTimeframe('bulan')" id="btnTfBulan" class="px-2.5 py-1 rounded-lg text-gray-600">Bulan</button>
+                        <button onclick="setCandleTimeframe('tahun')" id="btnTfTahun" class="px-2.5 py-1 rounded-lg text-gray-600">Tahun</button>
+                    </div>
                 </div>
-                <p class="text-xs text-gray-500">Rangkuman data operasional dan keuangan yang siap disalin atau diunduh sebagai laporan resmi.</p>
 
+                <!-- Pilihan Tipe Metrik Candle -->
+                <div class="flex border-b text-xs font-semibold gap-2">
+                    <button onclick="setCandleMetric('pcs')" id="btnMetPcs" class="py-2 px-3 border-b-2 border-blue-600 text-blue-600 font-bold">Candle Pcs</button>
+                    <button onclick="setCandleMetric('rp')" id="btnMetRp" class="py-2 px-3 text-gray-400">Candle Rp (Omset)</button>
+                    <button onclick="setCandleMetric('lb')" id="btnMetLb" class="py-2 px-3 text-gray-400">Candle Lb (Laba Bersih)</button>
+                </div>
+
+                <!-- PAPAN GRAFIK CANDLE -->
+                <div class="bg-slate-900 rounded-2xl p-4 shadow-inner relative overflow-hidden border border-slate-800">
+                    <div class="flex justify-between items-center text-xs text-slate-400 mb-2 font-mono">
+                        <span id="candleChartTitle">CANDLESTICK: TERJUAL (PCS)</span>
+                        <span class="text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Live Render</span>
+                    </div>
+                    <div class="w-full overflow-x-auto">
+                        <canvas id="candleCanvas" class="w-full h-64 block"></canvas>
+                    </div>
+                    <div class="mt-2 text-[10px] text-slate-400 flex justify-between">
+                        <span><span class="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-sm mr-1"></span> Hijau: Tren Naik / Positif</span>
+                        <span><span class="inline-block w-2.5 h-2.5 bg-rose-500 rounded-sm mr-1"></span> Merah: Tren Turun / Negatif</span>
+                    </div>
+                </div>
+
+                <!-- NOMINAL TOTAL DI BAWAH PAPAN CANDLE -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Pcs Terjual</span>
+                        <h4 id="candleTotalPcs" class="text-base font-bold text-gray-800 mt-0.5">0 Pcs</h4>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
+                        <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Total Omset</span>
+                        <h4 id="candleTotalOmset" class="text-base font-bold text-blue-900 mt-0.5">Rp 0</h4>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
+                        <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">Laba Bersih Murni</span>
+                        <h4 id="candleTotalLbMurni" class="text-base font-bold text-emerald-800 mt-0.5">Rp 0</h4>
+                        <span class="text-[9px] text-gray-400 block mt-0.5">*Tanpa potongan biaya</span>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
+                        <span class="text-[10px] font-bold text-teal-600 uppercase tracking-wider block">Laba Bersih Akhir</span>
+                        <h4 id="candleTotalLbSetelahPotong" class="text-base font-bold text-teal-900 mt-0.5">Rp 0</h4>
+                        <span class="text-[9px] text-gray-400 block mt-0.5">*Setelah potong pengeluaran</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: SEASON (SEBELUMNYA REKAP) -->
+            <section id="tabSeason" class="p-4 md:p-6 space-y-4 hidden">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800">Manajemen Season & Laporan</h2>
+                        <p class="text-xs text-gray-500">Pemantauan rekapitulasi performa dan pembagian periode Season.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="generateRekapFormat()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+                            <i class="fa-solid fa-sync mr-1"></i> Perbarui
+                        </button>
+                        <!-- TOMBOL END SEASON (ADMIN ONLY) -->
+                        <div id="adminEndSeasonAction" class="hidden">
+                            <button onclick="handleEndSeasonPrompt()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-3.5 py-1.5 rounded-lg font-bold shadow transition flex items-center">
+                                <i class="fa-solid fa-flag-checkered mr-1.5"></i> End Season
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD RIWAYAT SEASON -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase flex items-center justify-between">
+                        <span><i class="fa-solid fa-clock-rotate-left text-blue-600 mr-1.5"></i> Riwayat Season Sebelumnya</span>
+                        <span id="seasonCountBadge" class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-mono">0 Season</span>
+                    </h3>
+                    <div id="riwayatSeasonList" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto">
+                        <p class="text-xs text-gray-400 italic py-2 col-span-2 text-center">Belum ada riwayat season yang diakhiri.</p>
+                    </div>
+                </div>
+
+                <!-- FORMAT REKAP MUSIM AKTIF -->
                 <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
                     <div class="flex justify-between items-center border-b pb-2">
-                        <span class="text-xs font-bold text-gray-700 uppercase"><i class="fa-solid fa-clipboard text-blue-600 mr-1"></i> Teks Format Rekap</span>
+                        <span class="text-xs font-bold text-gray-700 uppercase"><i class="fa-solid fa-clipboard text-blue-600 mr-1"></i> Teks Format Rekap Musim Berjalan</span>
                         <button onclick="copyRekapText()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1 rounded font-medium transition">
                             <i class="fa-solid fa-copy mr-1"></i> Salin Teks
                         </button>
                     </div>
-                    <textarea id="rekapTextArea" readonly rows="13" class="w-full text-xs font-mono bg-gray-50 border rounded-lg p-2.5 focus:outline-none text-gray-700 select-all"></textarea>
+                    <textarea id="rekapTextArea" readonly rows="12" class="w-full text-xs font-mono bg-gray-50 border rounded-lg p-2.5 focus:outline-none text-gray-700 select-all"></textarea>
                     <button onclick="downloadRekapTxt()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs py-2.5 rounded-lg shadow transition flex items-center justify-center">
                         <i class="fa-solid fa-file-arrow-down mr-1.5"></i> Unduh File Rekap (.txt)
                     </button>
                 </div>
             </section>
 
-            <!-- TAB 5: PENGATURAN & KONVERSI -->
+            <!-- TAB 6: PENGATURAN & KONVERSI -->
             <section id="tabPengaturan" class="p-4 md:p-6 space-y-4 hidden">
                 <h2 class="text-lg font-bold text-gray-800">Pengaturan & Konversi Sistem</h2>
 
@@ -461,10 +551,10 @@
                     </div>
                 </div>
 
-                <!-- PANEL LISENSI & LEGALITAS APLIKASI (DITEMPATKAN DI PALING BAWAH PENGATURAN) -->
+                <!-- PANEL LISENSI & LEGALITAS APLIKASI -->
                 <div class="bg-gradient-to-br from-slate-50 to-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm space-y-3">
                     <h3 class="text-xs font-bold text-blue-900 uppercase border-b border-blue-200 pb-2"><i class="fa-solid fa-file-contract text-blue-600 mr-1"></i> Lisensi & Legalitas Aplikasi</h3>
-                    <p class="text-xs text-gray-600">Arna Toys[span_1](start_span)[span_1](end_span) - Konsinyasi & Sistem Retail (CRS)[span_2](start_span)[span_2](end_span) dikembangkan oleh <strong>Deri Septian Maulana</strong>.</p>
+                    <p class="text-xs text-gray-600">Arna Toys - Konsinyasi & Sistem Retail (CRS) dikembangkan oleh <strong>Deri Septian Maulana</strong>.</p>
                     <button onclick="toggleLicenseModal(true)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs py-2.5 rounded-lg shadow transition flex items-center justify-center">
                         <i class="fa-solid fa-eye mr-1.5"></i> Lihat Perjanjian Lisensi Pengguna (EULA)
                     </button>
@@ -473,27 +563,31 @@
 
         </main>
 
-        <!-- BOTTOM NAVIGATION BAR (FIXED & MENGAMBANG) -->
-        <nav class="bg-white border-t border-gray-200 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl grid grid-cols-5 py-2 px-1 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:rounded-b-2xl">
+        <!-- BOTTOM NAVIGATION BAR (FIXED & 6 KOLOM TERBARU) -->
+        <nav class="bg-white border-t border-gray-200 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl grid grid-cols-6 py-2 px-1 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:rounded-b-2xl">
             <button onclick="switchTab('Dashboard')" id="navTabDashboard" class="flex flex-col items-center justify-center text-blue-600 py-1 transition">
-                <i class="fa-solid fa-chart-pie text-base mb-0.5"></i>
-                <span class="text-[9px] md:text-xs font-medium">Dashboard</span>
+                <i class="fa-solid fa-chart-pie text-sm md:text-base mb-0.5"></i>
+                <span class="text-[8px] md:text-xs font-medium">Dashboard</span>
             </button>
             <button onclick="switchTab('Penjualan')" id="navTabPenjualan" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
-                <i class="fa-solid fa-cart-shopping text-base mb-0.5"></i>
-                <span class="text-[9px] md:text-xs font-medium">Penjualan</span>
+                <i class="fa-solid fa-cart-shopping text-sm md:text-base mb-0.5"></i>
+                <span class="text-[8px] md:text-xs font-medium">Penjualan</span>
             </button>
             <button onclick="switchTab('Aktivitas')" id="navTabAktivitas" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
-                <i class="fa-solid fa-clipboard-list text-base mb-0.5"></i>
-                <span class="text-[9px] md:text-xs font-medium">Aktivitas</span>
+                <i class="fa-solid fa-clipboard-list text-sm md:text-base mb-0.5"></i>
+                <span class="text-[8px] md:text-xs font-medium">Aktivitas</span>
             </button>
-            <button onclick="switchTab('Rekap')" id="navTabRekap" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
-                <i class="fa-solid fa-file-lines text-base mb-0.5"></i>
-                <span class="text-[9px] md:text-xs font-medium">Rekap</span>
+            <button onclick="switchTab('Candle')" id="navTabCandle" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
+                <i class="fa-solid fa-chart-candlestick text-sm md:text-base mb-0.5"></i>
+                <span class="text-[8px] md:text-xs font-medium">Candle</span>
+            </button>
+            <button onclick="switchTab('Season')" id="navTabSeason" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
+                <i class="fa-solid fa-calendar-check text-sm md:text-base mb-0.5"></i>
+                <span class="text-[8px] md:text-xs font-medium">Season</span>
             </button>
             <button onclick="switchTab('Pengaturan')" id="navTabPengaturan" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
-                <i class="fa-solid fa-gear text-base mb-0.5"></i>
-                <span class="text-[9px] md:text-xs font-medium">Pengaturan</span>
+                <i class="fa-solid fa-gear text-sm md:text-base mb-0.5"></i>
+                <span class="text-[8px] md:text-xs font-medium">Pengaturan</span>
             </button>
         </nav>
 
@@ -516,6 +610,29 @@
 
     </div>
 
+    <!-- MODAL DETAIL SEASON -->
+    <div id="seasonModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <h3 id="modalSeasonTitle" class="font-bold text-sm"><i class="fa-solid fa-clock-rotate-left mr-1.5 text-amber-400"></i> Detail Riwayat Season</h3>
+                <button onclick="toggleSeasonModal(false)" class="p-1.5 text-white hover:bg-slate-800 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-3 flex-1">
+                <textarea id="modalSeasonText" readonly rows="12" class="w-full text-xs font-mono bg-gray-50 border rounded-lg p-3 focus:outline-none text-gray-700"></textarea>
+            </div>
+            <div class="p-3 border-t bg-gray-50 flex justify-between gap-2">
+                <button onclick="downloadSpecificSeasonTxt()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-lg font-medium transition flex items-center">
+                    <i class="fa-solid fa-file-arrow-down mr-1.5"></i> Unduh File (.txt)
+                </button>
+                <button onclick="toggleSeasonModal(false)" class="bg-gray-600 hover:bg-gray-700 text-white text-xs px-4 py-2 rounded-lg font-medium transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL POPUP LISENSI (EULA) -->
     <div id="licenseModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
@@ -532,10 +649,10 @@
                     <span class="inline-block bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">Lisensi Penggunaan Perorangan</span>
                 </div>
 
-                <p>Perjanjian Lisensi Pengguna Akhir ("EULA") ini adalah perjanjian hukum antara Anda (selaku Pengguna Perorangan) dengan <strong>Deri Septian Maulana</strong> selaku pencipta dan pemegang hak cipta tunggal atas aplikasi PWA <strong>Arna Toys</strong> dalam proyek <strong>CRS (Consignment Retail System)</strong>[span_3](start_span)[span_3](end_span).</p>
+                <p>Perjanjian Lisensi Pengguna Akhir ("EULA") ini adalah perjanjian hukum antara Anda (selaku Pengguna Perorangan) dengan <strong>Deri Septian Maulana</strong> selaku pencipta dan pemegang hak cipta tunggal atas aplikasi PWA <strong>Arna Toys</strong> dalam proyek <strong>CRS (Consignment Retail System)</strong>.</p>
                 
                 <h5 class="font-bold text-gray-900 mt-2">1. Pemberian Lisensi</h5>
-                <p>Dengan menginstal, mengakses, atau menggunakan aplikasi Arna Toys[span_4](start_span)[span_4](end_span), Anda diberikan lisensi non-eksklusif, tidak dapat dialihkan, dan terbatas untuk menggunakan aplikasi ini semata-mata guna membantu penghitungan dan pemantauan usaha perorangan Anda.</p>
+                <p>Dengan menginstal, mengakses, atau menggunakan aplikasi Arna Toys, Anda diberikan lisensi non-eksklusif, tidak dapat dialihkan, dan terbatas untuk menggunakan aplikasi ini semata-mata guna membantu penghitungan dan pemantauan usaha perorangan Anda.</p>
 
                 <h5 class="font-bold text-gray-900 mt-2">2. Batasan Penggunaan</h5>
                 <p>Anda <strong>TIDAK</strong> diizinkan untuk:</p>
@@ -546,7 +663,7 @@
                 </ul>
 
                 <h5 class="font-bold text-gray-900 mt-2">3. Hak Kekayaan Intelektual</h5>
-                <p>Seluruh hak cipta, hak milik intelektual, desain antarmuka, dan kode sumber aplikasi Arna Toys / CRS[span_5](start_span)[span_5](end_span) sepenuhnya adalah milik mutlak dari <strong>Deri Septian Maulana</strong>.</p>
+                <p>Seluruh hak cipta, hak milik intelektual, desain antarmuka, dan kode sumber aplikasi Arna Toys / CRS sepenuhnya adalah milik mutlak dari <strong>Deri Septian Maulana</strong>.</p>
 
                 <h5 class="font-bold text-gray-900 mt-2">4. Penafian Jaminan</h5>
                 <p>Aplikasi ini disediakan "sebagaimana adanya" tanpa jaminan apa pun, baik tersurat maupun tersirat. Pembuat tidak bertanggung jawab atas kerugian finansial, kehilangan data, atau kerusakan yang timbul akibat penggunaan atau ketidakmampuan menggunakan aplikasi ini.</p>
@@ -559,7 +676,7 @@
         </div>
     </div>
 
-    <!-- FIREBASE INITIALIZATION & SCRIPT TEROPTIMASI -->
+    <!-- SCRIPT UTAMA & FIREBASE LOGIC -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyD7YYO9OMRQ9aKBWDvfhsuOPkGg5WL2C8c",
@@ -596,20 +713,26 @@
                 manualLabaBersih: 400
             },
             dataPenjualan: [],
-            dataAktivitas: []
+            dataAktivitas: [],
+            seasons: []
         };
 
-        // FUNGSI TOGGLE MODAL LISENSI
+        // CANDLE VIEW STATE
+        let candleState = {
+            timeframe: 'hari', // hari, minggu, bulan, tahun
+            metric: 'pcs'      // pcs, rp, lb
+        };
+
+        let selectedModalSeason = null;
+
         function toggleLicenseModal(isOpen) {
-            const modal = document.getElementById('licenseModal');
-            if (isOpen) {
-                modal.classList.remove('hidden');
-            } else {
-                modal.classList.add('hidden');
-            }
+            document.getElementById('licenseModal').classList.toggle('hidden', !isOpen);
         }
 
-        // FUNGSI MEMUTAR NADA KHAS UANG MASUK (CHA-CHING SOUND)
+        function toggleSeasonModal(isOpen) {
+            document.getElementById('seasonModal').classList.toggle('hidden', !isOpen);
+        }
+
         function playCashSound() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -633,7 +756,7 @@
                 playTone(1318.51, 0.1, 0.25);
                 playTone(2093.00, 0.2, 0.4);
             } catch (e) {
-                console.log("Web Audio diblokir atau belum diizinkan pengguna:", e);
+                console.log("Audio diblokir pengguna:", e);
             }
         }
 
@@ -737,6 +860,14 @@
                 }
             });
 
+            // Sinkronisasi data Season
+            db.ref('seasons').off();
+            db.ref('seasons').on('value', seasonSnap => {
+                const sVal = seasonSnap.val();
+                appState.seasons = sVal ? Object.keys(sVal).map(k => ({ id: k, ...sVal[k] })) : [];
+                renderRiwayatSeason();
+            });
+
             if (appState.isAdmin) {
                 db.ref('outlets').off();
                 db.ref('outlets').on('value', outletSnap => {
@@ -767,6 +898,7 @@
                     renderTabelPenjualan();
                     renderAktivitas();
                     refreshDashboard();
+                    renderCandleChart();
                 });
             }
         }
@@ -783,21 +915,22 @@
                 }
                 lastPenjualanCount = newPenjualan.length;
 
-                appState.dataPenjualan = newPenjualan;
+                appState.dataPenjualan = newPenjualan.map(item => ({ ...item, _ownerUid: appState.inspectingOutletId }));
                 appState.dataAktivitas = outletData.aktivitas ? (Array.isArray(outletData.aktivitas) ? outletData.aktivitas : Object.values(outletData.aktivitas)) : [];
                 appState.config.stokDelta = outletData.stokDelta || 0;
             } else {
                 let combinedPenjualan = [];
                 let combinedAktivitas = [];
 
-                Object.values(appState.rawOutletsData).forEach(outletData => {
+                Object.keys(appState.rawOutletsData).forEach(uid => {
+                    const outletData = appState.rawOutletsData[uid];
                     if (outletData.penjualan) {
                         let pList = Array.isArray(outletData.penjualan) ? outletData.penjualan : Object.values(outletData.penjualan);
-                        combinedPenjualan = combinedPenjualan.concat(pList);
+                        pList.forEach(p => combinedPenjualan.push({ ...p, _ownerUid: uid }));
                     }
                     if (outletData.aktivitas) {
                         let aList = Array.isArray(outletData.aktivitas) ? outletData.aktivitas : Object.values(outletData.aktivitas);
-                        combinedAktivitas = combinedAktivitas.concat(aList);
+                        aList.forEach(a => combinedAktivitas.push({ ...a, _ownerUid: uid }));
                     }
                 });
 
@@ -813,6 +946,7 @@
             renderTabelPenjualan();
             renderAktivitas();
             refreshDashboard();
+            renderCandleChart();
         }
 
         function updateUIConfigFields() {
@@ -981,7 +1115,7 @@
         });
 
         function switchTab(tabName) {
-            ['Dashboard', 'Penjualan', 'Aktivitas', 'Rekap', 'Pengaturan'].forEach(t => {
+            ['Dashboard', 'Penjualan', 'Aktivitas', 'Candle', 'Season', 'Pengaturan'].forEach(t => {
                 document.getElementById('tab' + t)?.classList.add('hidden');
                 const navBtn = document.getElementById('navTab' + t);
                 if (navBtn) {
@@ -997,7 +1131,8 @@
                 activeNav.classList.add('text-blue-600');
             }
 
-            if (tabName === 'Rekap') generateRekapFormat();
+            if (tabName === 'Season') generateRekapFormat();
+            if (tabName === 'Candle') renderCandleChart();
         }
 
         function toggleDrawer(isOpen) {
@@ -1085,6 +1220,9 @@
             const outletStockPanel = document.getElementById('outletStockPanel');
             const adminConversionPanel = document.getElementById('adminConversionPanel');
             const adminMaintenanceSection = document.getElementById('adminMaintenanceSection');
+            const adminTableActions = document.getElementById('adminTableActions');
+            const thActionPenjualan = document.getElementById('thActionPenjualan');
+            const adminEndSeasonAction = document.getElementById('adminEndSeasonAction');
             
             if (appState.isAdmin) {
                 badge.innerText = 'Mode Admin';
@@ -1095,6 +1233,11 @@
                 outletStockPanel.classList.add('hidden');
                 adminConversionPanel.classList.remove('hidden');
                 adminMaintenanceSection.classList.remove('hidden');
+                
+                // Tampilkan fitur admin baru
+                adminTableActions.classList.remove('hidden');
+                thActionPenjualan.classList.remove('hidden');
+                adminEndSeasonAction.classList.remove('hidden');
             } else {
                 badge.innerText = 'Mode Outlet';
                 badge.className = 'text-xs bg-emerald-700 px-2 py-0.5 rounded-full font-medium';
@@ -1104,8 +1247,15 @@
                 outletStockPanel.classList.remove('hidden');
                 adminConversionPanel.classList.add('hidden');
                 adminMaintenanceSection.classList.add('hidden');
+
+                // Sembunyikan fitur admin
+                adminTableActions.classList.add('hidden');
+                thActionPenjualan.classList.add('hidden');
+                adminEndSeasonAction.classList.add('hidden');
             }
+            renderTabelPenjualan();
             refreshDashboard();
+            renderCandleChart();
         }
 
         function outletTambahStokPrompt() {
@@ -1231,10 +1381,12 @@
             
             const terjualPcs = bawaPcs - sisaPcs;
             const totalRp = terjualPcs * (appState.config.hargaPcs || 1200);
+            const uidTarget = appState.inspectingOutletId || currentUser.uid;
             
             if (!Array.isArray(appState.dataPenjualan)) appState.dataPenjualan = [];
 
-            appState.dataPenjualan.push({
+            const newSale = {
+                id: 'trx_' + Date.now() + Math.random().toString(36).substr(2, 4),
                 no: appState.dataPenjualan.length + 1,
                 tgl,
                 sales,
@@ -1242,15 +1394,17 @@
                 sisa: sisaPcs,
                 terjual: terjualPcs,
                 totalRp,
-                outlet: appState.currentOutlet
-            });
+                outlet: appState.currentOutlet,
+                _ownerUid: uidTarget
+            };
+
+            appState.dataPenjualan.push(newSale);
             
             document.getElementById('formPenjualan').reset();
             document.getElementById('previewKonversiBawa').innerText = 'Setara: 0 Pcs';
             saveDataToDB();
             
             playCashSound();
-            
             alert('Data penjualan berhasil disimpan secara real-time!');
         }
 
@@ -1259,12 +1413,14 @@
             if (!Array.isArray(appState.dataAktivitas)) appState.dataAktivitas = [];
 
             appState.dataAktivitas.push({
+                id: 'act_' + Date.now() + Math.random().toString(36).substr(2, 4),
                 tipe: 'pengeluaran',
                 tgl: document.getElementById('exTgl').value,
                 keterangan: document.getElementById('exKet').value,
                 nominal: parseFloat(document.getElementById('exNominal').value) || 0,
                 sumber: document.getElementById('exSumber').value,
-                outlet: appState.currentOutlet
+                outlet: appState.currentOutlet,
+                _ownerUid: appState.inspectingOutletId || currentUser.uid
             });
             
             document.getElementById('formPengeluaran').reset();
@@ -1277,12 +1433,14 @@
             if (!Array.isArray(appState.dataAktivitas)) appState.dataAktivitas = [];
 
             appState.dataAktivitas.push({
+                id: 'act_' + Date.now() + Math.random().toString(36).substr(2, 4),
                 tipe: 'stok_keluar',
                 subTipe: document.getElementById('skJenis').value,
                 tgl: document.getElementById('skTgl').value,
                 pcs: parseFloat(document.getElementById('skPcs').value) || 0,
                 keterangan: document.getElementById('skKet').value,
-                outlet: appState.currentOutlet
+                outlet: appState.currentOutlet,
+                _ownerUid: appState.inspectingOutletId || currentUser.uid
             });
             
             document.getElementById('formStokKeluar').reset();
@@ -1290,12 +1448,112 @@
             alert('Aktivitas stok keluar berhasil dicatat!');
         }
 
+        // FUNGSI HAPUS PENJUALAN (ADMIN ONLY)
+        function hapusPenjualanItem(index, trxId) {
+            if (!appState.isAdmin) {
+                alert("Hanya Admin yang memiliki hak untuk menghapus transaksi penjualan!");
+                return;
+            }
+
+            if (!confirm("Apakah Anda yakin ingin menghapus data penjualan ini? Tindakan ini tidak dapat dibatalkan.")) return;
+
+            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            let targetTrx = listPenjualan[index];
+            if (!targetTrx) return;
+
+            const ownerUid = targetTrx._ownerUid || appState.inspectingOutletId || currentUser.uid;
+
+            if (appState.isAdmin && !appState.inspectingOutletId) {
+                // Hapus langsung dari outlet terkait di Firebase
+                db.ref(`outlets/${ownerUid}/penjualan`).once('value', snap => {
+                    let outletList = snap.val() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
+                    let filtered = outletList.filter(p => (trxId ? p.id !== trxId : (p.tgl !== targetTrx.tgl || p.sales !== targetTrx.sales || p.terjual !== targetTrx.terjual)));
+                    db.ref(`outlets/${ownerUid}/penjualan`).set(filtered).then(() => {
+                        alert("Data penjualan berhasil dihapus dari sistem.");
+                    });
+                });
+            } else {
+                listPenjualan.splice(index, 1);
+                appState.dataPenjualan = listPenjualan;
+                saveDataToDB();
+                alert("Data penjualan berhasil dihapus.");
+            }
+        }
+
+        // FUNGSI UNDUH PENJUALAN XLS (ADMIN ONLY)
+        function downloadPenjualanXls() {
+            if (!appState.isAdmin) {
+                alert("Fitur unduh XLS hanya dapat diakses dalam mode admin!");
+                return;
+            }
+
+            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            if (listPenjualan.length === 0) {
+                alert("Tidak ada data penjualan untuk diunduh!");
+                return;
+            }
+
+            let tableHtml = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Riwayat Penjualan</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+                    <meta http-equiv="content-type" content="text/plain; charset=UTF-8"/>
+                </head>
+                <body>
+                    <table border="1">
+                        <thead>
+                            <tr style="background-color: #2563EB; color: #FFFFFF; font-weight: bold;">
+                                <th>No</th>
+                                <th>Tanggal</th>
+                                <th>Outlet</th>
+                                <th>Sales</th>
+                                <th>Barang Bawa</th>
+                                <th>Sisa (Pcs)</th>
+                                <th>Terjual (Pcs)</th>
+                                <th>Total Omset (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            listPenjualan.forEach((item, idx) => {
+                tableHtml += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${item.tgl}</td>
+                        <td>${item.outlet || 'Pusat'}</td>
+                        <td>${item.sales}</td>
+                        <td>${item.bawaStr || '-'}</td>
+                        <td>${item.sisa}</td>
+                        <td>${item.terjual}</td>
+                        <td>${item.totalRp}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            let blob = new Blob(["\ufeff" + tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = `Riwayat_Penjualan_ArnaToys_${new Date().toISOString().split('T')[0]}.xls`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
         function renderTabelPenjualan() {
             const tbody = document.getElementById('tablePenjualanBody');
             let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
             
             if (listPenjualan.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400 italic">Belum ada data penjualan</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${appState.isAdmin ? 8 : 7}" class="p-4 text-center text-gray-400 italic">Belum ada data penjualan</td></tr>`;
                 return;
             }
             
@@ -1310,6 +1568,13 @@
                         <td class="p-2.5">${item.sisa} Pcs</td>
                         <td class="p-2.5 font-semibold text-blue-600">${item.terjual} Pcs</td>
                         <td class="p-2.5 font-semibold text-emerald-600">Rp ${(item.totalRp || 0).toLocaleString('id-ID')}</td>
+                        ${appState.isAdmin ? `
+                            <td class="p-2.5 text-center">
+                                <button onclick="hapusPenjualanItem(${index}, '${item.id || ''}')" title="Hapus Data Ini" class="text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 p-1.5 rounded-md transition">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        ` : ''}
                     </tr>
                 `;
             });
@@ -1384,6 +1649,8 @@
             if (outletDisplay) outletDisplay.innerText = `${stokAkhir} Pcs`;
         }
 
+        // ==================== LOGIKA FITUR SEASON & END SEASON ==================== //
+
         function generateRekapFormat() {
             let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
             let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
@@ -1437,6 +1704,149 @@
             formatStr += `   - Wr- (Retur/Stop)  : ${countWrMin} Warung\n`;
 
             document.getElementById('rekapTextArea').value = formatStr;
+            return formatStr;
+        }
+
+        function handleEndSeasonPrompt() {
+            if (!appState.isAdmin) {
+                alert("Hanya Admin yang dapat mengoperasikan End Season!");
+                return;
+            }
+
+            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
+
+            if (listPenjualan.length === 0 && listAktivitas.length === 0) {
+                alert("Belum ada data transaksi yang berjalan untuk diakhiri season-nya.");
+                return;
+            }
+
+            if (!confirm("KONFIRMASI END SEASON:\n\nApakah Anda yakin ingin Mengakhiri Season ini?\n- Seluruh Omset, Penjualan, Laba, dan Aktivitas di SELURUH OUTLET akan direset ke 0.\n- Sisa stok gudang aktif saat ini akan tetap dipertahankan untuk Season baru.\n- Rekap data akan otomatis diarsipkan ke Card Riwayat Season.\n\nLanjutkan?")) {
+                return;
+            }
+
+            // Tentukan rentang tanggal
+            let allDates = [];
+            listPenjualan.forEach(p => { if (p.tgl) allDates.push(p.tgl); });
+            listAktivitas.forEach(a => { if (a.tgl) allDates.push(a.tgl); });
+
+            allDates.sort();
+
+            const formatDateIndo = (dStr) => {
+                if (!dStr) return new Date().toLocaleDateString('id-ID');
+                let parts = dStr.split('-');
+                if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                return dStr;
+            };
+
+            let tglMulai = allDates.length > 0 ? formatDateIndo(allDates[0]) : formatDateIndo(new Date().toISOString().split('T')[0]);
+            let tglSelesai = allDates.length > 0 ? formatDateIndo(allDates[allDates.length - 1]) : formatDateIndo(new Date().toISOString().split('T')[0]);
+
+            let seasonCardTitle = `SEASON : ${tglMulai}/${tglSelesai}`;
+            let finalRekapText = generateRekapFormat();
+
+            let seasonRecord = {
+                title: seasonCardTitle,
+                tglMulai,
+                tglSelesai,
+                createdDate: new Date().toLocaleString('id-ID'),
+                rekapText: finalRekapText,
+                omsetStr: document.getElementById('dashOmset').innerText,
+                terjualStr: document.getElementById('dashTerjual').innerText
+            };
+
+            // Simpan ke Riwayat Season Firebase
+            db.ref('seasons').push(seasonRecord).then(() => {
+                // Eksekusi Reset ke Semua Cabang Outlet
+                db.ref('outlets').once('value', snapshot => {
+                    let allOutlets = snapshot.val() || {};
+                    let updates = {};
+
+                    Object.keys(allOutlets).forEach(uid => {
+                        let out = allOutlets[uid];
+                        let currentStokGudang = out.stokDelta || 0;
+                        let sTerjual = 0;
+                        let sNet = 0;
+
+                        let pArr = out.penjualan ? (Array.isArray(out.penjualan) ? out.penjualan : Object.values(out.penjualan)) : [];
+                        let aArr = out.aktivitas ? (Array.isArray(out.aktivitas) ? out.aktivitas : Object.values(out.aktivitas)) : [];
+
+                        pArr.forEach(p => { sTerjual += (p.terjual || 0); });
+                        aArr.forEach(a => {
+                            if (a.tipe === 'stok_keluar') {
+                                if (a.subTipe === 'wr+') sNet += (a.pcs || 0);
+                                else if (a.subTipe === 'wr-') sNet -= (a.pcs || 0);
+                            }
+                        });
+
+                        let sisaStokFisik = Math.max(0, currentStokGudang - sTerjual - sNet);
+
+                        // Reset transaksi, pertahankan sisa fisik sebagai stokDelta awal
+                        updates[`outlets/${uid}/penjualan`] = [];
+                        updates[`outlets/${uid}/aktivitas`] = [];
+                        updates[`outlets/${uid}/stokDelta`] = sisaStokFisik;
+                    });
+
+                    // Reset admin config stokDelta
+                    let adminStokFisik = hitungStokAktifFisik();
+                    updates['admin_config/stokDelta'] = adminStokFisik;
+
+                    db.ref().update(updates).then(() => {
+                        alert(`Sukses! ${seasonCardTitle} berhasil diakhiri.\nSeluruh data transaksi outlet telah direset untuk menyambut Season baru.`);
+                        generateRekapFormat();
+                    });
+                });
+            });
+        }
+
+        function renderRiwayatSeason() {
+            const listEl = document.getElementById('riwayatSeasonList');
+            const badgeEl = document.getElementById('seasonCountBadge');
+            badgeEl.innerText = `${appState.seasons.length} Season`;
+
+            if (appState.seasons.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-gray-400 italic py-2 col-span-2 text-center">Belum ada riwayat season yang diakhiri.</p>`;
+                return;
+            }
+
+            let htmlStr = '';
+            appState.seasons.slice().reverse().forEach((s, idx) => {
+                htmlStr += `
+                    <div onclick="bukaModalDetailSeason('${s.id}')" class="bg-white border border-slate-200 hover:border-blue-500 rounded-xl p-3 shadow-sm cursor-pointer transition transform hover:-translate-y-0.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-gray-800">${s.title}</span>
+                            <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="mt-2 text-[10px] text-gray-500 flex justify-between border-t pt-1.5">
+                            <span>Omset: <b class="text-blue-600">${s.omsetStr || 'Rp 0'}</b></span>
+                            <span>Terjual: <b class="text-emerald-600">${s.terjualStr || '0 Pcs'}</b></span>
+                        </div>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = htmlStr;
+        }
+
+        function bukaModalDetailSeason(seasonId) {
+            let season = appState.seasons.find(s => s.id === seasonId);
+            if (!season) return;
+
+            selectedModalSeason = season;
+            document.getElementById('modalSeasonTitle').innerText = season.title;
+            document.getElementById('modalSeasonText').value = season.rekapText || 'Tidak ada catatan rekap.';
+            toggleSeasonModal(true);
+        }
+
+        function downloadSpecificSeasonTxt() {
+            if (!selectedModalSeason) return;
+            let blob = new Blob([selectedModalSeason.rekapText || ''], { type: 'text/plain;charset=utf-8' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = `${selectedModalSeason.title.replace(/[\s\:\/]/g, '_')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
         }
 
         function copyRekapText() {
@@ -1461,6 +1871,220 @@
             document.body.appendChild(anchor);
             anchor.click();
             anchor.remove();
+        }
+
+        // ==================== LOGIKA FITUR CANDLESTICK CHART ==================== //
+
+        function setCandleTimeframe(tf) {
+            candleState.timeframe = tf;
+            ['hari', 'minggu', 'bulan', 'tahun'].forEach(t => {
+                let btn = document.getElementById('btnTf' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (btn) {
+                    if (t === tf) {
+                        btn.className = "px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow font-semibold";
+                    } else {
+                        btn.className = "px-2.5 py-1 rounded-lg text-gray-600 font-semibold";
+                    }
+                }
+            });
+            renderCandleChart();
+        }
+
+        function setCandleMetric(metric) {
+            candleState.metric = metric;
+            const metrics = { pcs: 'Terjual (Pcs)', rp: 'Omset (Rp)', lb: 'Laba Bersih (Lb)' };
+            document.getElementById('candleChartTitle').innerText = `CANDLESTICK: ${metrics[metric].toUpperCase()}`;
+
+            ['pcs', 'rp', 'lb'].forEach(m => {
+                let btn = document.getElementById('btnMet' + m.charAt(0).toUpperCase() + m.slice(1));
+                if (btn) {
+                    if (m === metric) {
+                        btn.className = "py-2 px-3 border-b-2 border-blue-600 text-blue-600 font-bold";
+                    } else {
+                        btn.className = "py-2 px-3 text-gray-400";
+                    }
+                }
+            });
+            renderCandleChart();
+        }
+
+        function renderCandleChart() {
+            const canvas = document.getElementById('candleCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            // Responsive high-DPI scaling
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = (rect.width || 600) * dpr;
+            canvas.height = 250 * dpr;
+            ctx.scale(dpr, dpr);
+
+            const width = rect.width || 600;
+            const height = 250;
+
+            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
+
+            // Hitung Nominal Total untuk Kartu di Bawah Papan Candle
+            let totalPcs = 0;
+            let totalOmset = 0;
+            let totalPengeluaranLb = 0;
+
+            listPenjualan.forEach(p => {
+                totalPcs += (p.terjual || 0);
+                totalOmset += (p.totalRp || 0);
+            });
+
+            listAktivitas.forEach(a => {
+                if (a.tipe === 'pengeluaran' && a.sumber === 'laba_bersih') {
+                    totalPengeluaranLb += (a.nominal || 0);
+                }
+            });
+
+            const lbMurniPerPcs = appState.config.manualLabaBersih || 400;
+            const totalLbMurni = totalPcs * lbMurniPerPcs;
+            const totalLbSetelahPotong = Math.max(0, totalLbMurni - totalPengeluaranLb);
+
+            document.getElementById('candleTotalPcs').innerText = `${totalPcs.toLocaleString('id-ID')} Pcs`;
+            document.getElementById('candleTotalOmset').innerText = `Rp ${totalOmset.toLocaleString('id-ID')}`;
+            document.getElementById('candleTotalLbMurni').innerText = `Rp ${totalLbMurni.toLocaleString('id-ID')}`;
+            document.getElementById('candleTotalLbSetelahPotong').innerText = `Rp ${totalLbSetelahPotong.toLocaleString('id-ID')}`;
+
+            // KELOMPOKKAN DATA MENJADI LILIN (OHLC)
+            let groupedMap = {};
+            const tf = candleState.timeframe;
+
+            listPenjualan.forEach(item => {
+                if (!item.tgl) return;
+                const d = new Date(item.tgl);
+                if (isNaN(d)) return;
+
+                let key = '';
+                if (tf === 'hari') {
+                    key = item.tgl; // per tanggal
+                } else if (tf === 'minggu') {
+                    const firstDayOfYear = new Date(d.getFullYear(), 0, 1);
+                    const pastDaysOfYear = (d - firstDayOfYear) / 86400000;
+                    const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+                    key = `W${weekNum}-${d.getFullYear()}`;
+                } else if (tf === 'bulan') {
+                    key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                } else if (tf === 'tahun') {
+                    key = `${d.getFullYear()}`;
+                }
+
+                if (!groupedMap[key]) groupedMap[key] = [];
+
+                let val = 0;
+                if (candleState.metric === 'pcs') val = item.terjual || 0;
+                else if (candleState.metric === 'rp') val = item.totalRp || 0;
+                else if (candleState.metric === 'lb') val = (item.terjual || 0) * lbMurniPerPcs;
+
+                groupedMap[key].push(val);
+            });
+
+            let keys = Object.keys(groupedMap).sort();
+            
+            // JIKA DATA KOSONG, TAMPILKAN PLACEHOLDER
+            if (keys.length === 0) {
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillStyle = "#64748B";
+                ctx.font = "12px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("Belum ada data transaksi penjualan untuk ditampilkan.", width / 2, height / 2);
+                return;
+            }
+
+            // Batasi hingga 15 lilin terakhir agar grafik tetap rapi
+            if (keys.length > 15) keys = keys.slice(-15);
+
+            let candleData = keys.map(k => {
+                let vals = groupedMap[k];
+                let open = vals[0];
+                let close = vals[vals.length - 1];
+                let high = Math.max(...vals);
+                let low = Math.min(...vals);
+
+                // Variasi lilin jika transaksi tunggal
+                if (open === close && high === low) {
+                    high = Math.round(high * 1.15);
+                    low = Math.round(low * 0.85);
+                }
+
+                return { label: k, open, close, high, low };
+            });
+
+            // Tentukan min dan max untuk sumbu Y
+            let minVal = Math.min(...candleData.map(c => c.low));
+            let maxVal = Math.max(...candleData.map(c => c.high));
+            if (minVal === maxVal) {
+                minVal = 0;
+                maxVal = maxVal || 100;
+            }
+            const paddingY = (maxVal - minVal) * 0.15 || 10;
+            minVal = Math.max(0, minVal - paddingY);
+            maxVal = maxVal + paddingY;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // GAMBAR GRID & GARIS BANTU
+            ctx.strokeStyle = '#1E293B';
+            ctx.lineWidth = 1;
+            const gridLines = 4;
+            for (let i = 0; i <= gridLines; i++) {
+                let y = 20 + ((height - 60) / gridLines) * i;
+                ctx.beginPath();
+                ctx.moveTo(30, y);
+                ctx.lineTo(width - 20, y);
+                ctx.stroke();
+
+                let valAtGrid = maxVal - ((maxVal - minVal) / gridLines) * i;
+                ctx.fillStyle = '#64748B';
+                ctx.font = '9px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(Math.round(valAtGrid).toLocaleString('id-ID'), 26, y + 3);
+            }
+
+            // GAMBAR LILIN (CANDLESTICKS)
+            const chartAreaWidth = width - 60;
+            const step = chartAreaWidth / candleData.length;
+            const candleWidth = Math.max(6, Math.min(22, step * 0.55));
+
+            candleData.forEach((c, idx) => {
+                let cx = 45 + step * idx + step / 2;
+                let isUp = c.close >= c.open;
+                let color = isUp ? '#10B981' : '#F43F5E';
+
+                const getY = val => 20 + (height - 60) * (1 - (val - minVal) / (maxVal - minVal));
+
+                let yHigh = getY(c.high);
+                let yLow = getY(c.low);
+                let yOpen = getY(c.open);
+                let yClose = getY(c.close);
+
+                // Garis Sumbu (Wick)
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.moveTo(cx, yHigh);
+                ctx.lineTo(cx, yLow);
+                ctx.stroke();
+
+                // Badan Lilin (Body)
+                let bodyTop = Math.min(yOpen, yClose);
+                let bodyHeight = Math.max(3, Math.abs(yClose - yOpen));
+
+                ctx.fillStyle = color;
+                ctx.fillRect(cx - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+
+                // Label Sumbu X
+                ctx.fillStyle = '#94A3B8';
+                ctx.font = '9px sans-serif';
+                ctx.textAlign = 'center';
+                let shortLabel = c.label.length > 8 ? c.label.substring(5) : c.label;
+                ctx.fillText(shortLabel, cx, height - 15);
+            });
         }
     </script>
 
