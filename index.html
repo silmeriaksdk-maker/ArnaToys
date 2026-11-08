@@ -23,7 +23,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800 antialiased min-h-screen">
+<body class="bg-gray-100 font-sans text-gray-800 antialiased min-h-screen select-none">
 
     <!-- AUTHENTICATION SCREEN -->
     <div id="authScreen" class="w-full min-h-screen flex items-center justify-center p-4">
@@ -160,34 +160,38 @@
 
             <!-- TAB 2: PENJUALAN -->
             <section id="tabPenjualan" class="p-4 md:p-6 space-y-4 hidden">
-                <h2 class="text-lg font-bold text-gray-800">Input Transaksi Penjualan</h2>
+                <h2 class="text-lg font-bold text-gray-800">Transaksi Penjualan</h2>
                 
-                <form id="formPenjualan" onsubmit="handlePenjualanSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 md:p-5 shadow-sm space-y-3">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
-                            <input type="date" id="pTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <!-- CONTAINER INPUT PENJUALAN (DISEMBUNYIKAN PADA ADMIN UMUM) -->
+                <div id="cardPenjualanInputContainer">
+                    <form id="formPenjualan" onsubmit="handlePenjualanSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 md:p-5 shadow-sm space-y-3">
+                        <h3 class="text-xs font-bold text-blue-600 uppercase"><i class="fa-solid fa-cash-register mr-1"></i> Form Input Penjualan</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
+                                <input type="date" id="pTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Sales</label>
+                                <input type="text" id="pSales" placeholder="Contoh: Andi" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Sales</label>
-                            <input type="text" id="pSales" placeholder="Contoh: Andi" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label id="labelSatuanBawa" class="block text-xs font-semibold text-gray-600 mb-1">Jumlah Terpal/Pack</label>
+                                <input type="number" id="pJumlahBawa" placeholder="0" min="1" required oninput="hitungKonversiBawa()" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <span id="previewKonversiBawa" class="text-[10px] text-gray-500 mt-1 block">Setara: 0 Pcs</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Sisa Barang (Pcs)</label>
+                                <input type="number" id="pSisa" placeholder="0" min="0" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label id="labelSatuanBawa" class="block text-xs font-semibold text-gray-600 mb-1">Jumlah Terpal/Pack</label>
-                            <input type="number" id="pJumlahBawa" placeholder="0" min="1" required oninput="hitungKonversiBawa()" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            <span id="previewKonversiBawa" class="text-[10px] text-gray-500 mt-1 block">Setara: 0 Pcs</span>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Sisa Barang (Pcs)</label>
-                            <input type="number" id="pSisa" placeholder="0" min="0" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
-                        Simpan Penjualan
-                    </button>
-                </form>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
+                            Simpan Penjualan
+                        </button>
+                    </form>
+                </div>
 
                 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mt-4">
                     <div class="p-3 bg-gray-50 border-b border-gray-200 flex flex-wrap justify-between items-center gap-2">
@@ -227,7 +231,8 @@
             <section id="tabAktivitas" class="p-4 md:p-6 space-y-4 hidden">
                 <h2 class="text-lg font-bold text-gray-800">Aktivitas (Pengeluaran & Stok Keluar)</h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- CONTAINER INPUT AKTIVITAS (DISEMBUNYIKAN PADA ADMIN UMUM) -->
+                <div id="cardAktivitasInputContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <form id="formPengeluaran" onsubmit="handlePengeluaranSubmit(event)" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
                         <h3 class="text-xs font-bold text-blue-600 uppercase"><i class="fa-solid fa-wallet mr-1"></i> Input Pengeluaran Operasional</h3>
                         <div>
@@ -294,12 +299,14 @@
                 </div>
             </section>
 
-            <!-- TAB 4: CANDLE (FITUR BARU) -->
+            <!-- TAB 4: CANDLE -->
             <section id="tabCandle" class="p-4 md:p-6 space-y-4 hidden">
                 <div class="flex flex-wrap justify-between items-center gap-2">
                     <div>
-                        <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-chart-column text-blue-600 mr-1.5"></i> Candle Penjualan</h2>
-                        <p class="text-xs text-gray-500">Visualisasi tren penjualan ritel dalam bentuk candlestick.</p>
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-chart-line text-blue-600 mr-2"></i> Candle Penjualan Real-Time
+                        </h2>
+                        <p class="text-xs text-gray-500">Visualisasi tren berkelanjutan lintas season (klik candle untuk melihat detail).</p>
                     </div>
                     <!-- Pilihan Timeframe -->
                     <div class="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold">
@@ -318,24 +325,25 @@
                 </div>
 
                 <!-- PAPAN GRAFIK CANDLE -->
-                <div class="bg-slate-900 rounded-2xl p-4 shadow-inner relative overflow-hidden border border-slate-800">
+                <div class="bg-slate-900 rounded-2xl p-4 shadow-2xl relative overflow-hidden border border-slate-800">
                     <div class="flex justify-between items-center text-xs text-slate-400 mb-2 font-mono">
-                        <span id="candleChartTitle">CANDLESTICK: TERJUAL (PCS)</span>
-                        <span class="text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Live Render</span>
+                        <span id="candleChartTitle" class="font-bold text-slate-300">CANDLESTICK: TERJUAL (PCS)</span>
+                        <span class="text-emerald-400 flex items-center"><i class="fa-solid fa-circle text-[8px] animate-pulse mr-1.5"></i> Live Interactive</span>
                     </div>
-                    <div class="w-full overflow-x-auto">
-                        <canvas id="candleCanvas" class="w-full h-64 block"></canvas>
+                    <div class="w-full relative">
+                        <canvas id="candleCanvas" class="w-full h-72 block cursor-pointer"></canvas>
+                        <div id="candleTooltip" class="absolute pointer-events-none hidden bg-slate-950/90 text-white text-[11px] p-2.5 rounded-xl border border-slate-700 shadow-xl z-20 backdrop-blur-sm"></div>
                     </div>
-                    <div class="mt-2 text-[10px] text-slate-400 flex justify-between">
-                        <span><span class="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-sm mr-1"></span> Hijau: Tren Naik / Positif</span>
-                        <span><span class="inline-block w-2.5 h-2.5 bg-rose-500 rounded-sm mr-1"></span> Merah: Tren Turun / Negatif</span>
+                    <div class="mt-3 text-[10px] text-slate-400 flex justify-between border-t border-slate-800/80 pt-2">
+                        <span class="flex items-center"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-sm mr-1.5 inline-block"></span> Hijau: Tren Naik / Stabil</span>
+                        <span class="flex items-center"><span class="w-2.5 h-2.5 bg-rose-500 rounded-sm mr-1.5 inline-block"></span> Merah: Tren Koreksi</span>
                     </div>
                 </div>
 
                 <!-- NOMINAL TOTAL DI BAWAH PAPAN CANDLE -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Pcs Terjual</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Terjual (Akumulasi)</span>
                         <h4 id="candleTotalPcs" class="text-base font-bold text-gray-800 mt-0.5">0 Pcs</h4>
                     </div>
                     <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
@@ -348,14 +356,14 @@
                         <span class="text-[9px] text-gray-400 block mt-0.5">*Tanpa potongan biaya</span>
                     </div>
                     <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
-                        <span class="text-[10px] font-bold text-teal-600 uppercase tracking-wider block">Laba Bersih Akhir</span>
-                        <h4 id="candleTotalLbSetelahPotong" class="text-base font-bold text-teal-900 mt-0.5">Rp 0</h4>
-                        <span class="text-[9px] text-gray-400 block mt-0.5">*Setelah potong pengeluaran</span>
+                        <span class="text-[10px] font-bold text-amber-600 uppercase tracking-wider block">Laba Barang (Kotor)</span>
+                        <h4 id="candleTotalLabaBarang" class="text-base font-bold text-amber-900 mt-0.5">Rp 0</h4>
+                        <span class="text-[9px] text-gray-400 block mt-0.5">*Basis kotor sebelum biaya</span>
                     </div>
                 </div>
             </section>
 
-            <!-- TAB 5: SEASON (SEBELUMNYA REKAP) -->
+            <!-- TAB 5: SEASON -->
             <section id="tabSeason" class="p-4 md:p-6 space-y-4 hidden">
                 <div class="flex flex-wrap justify-between items-center gap-2">
                     <div>
@@ -417,7 +425,7 @@
                             <i class="fa-solid fa-plus mr-1"></i> Tambah Stok
                         </button>
                     </div>
-                    <p class="text-[11px] text-gray-500 italic">*Nilai konversi sistem secara otomatis diatur secara terpusat oleh Admin.</p>
+                    <p class="text-[11px] text-gray-500 italic">*Nilai konversi sistem diatur secara terpusat oleh Admin.</p>
                 </div>
 
                 <!-- PANEL KONVERSI ADMIN -->
@@ -490,7 +498,7 @@
                     <div id="maintenanceUnlockedView" class="space-y-3 hidden">
                         <div class="bg-slate-800 p-3 rounded-lg space-y-1.5 border border-slate-700">
                             <span class="text-[11px] font-bold text-rose-400 block"><i class="fa-solid fa-user-xmark mr-1"></i> Hapus Akun & Data</span>
-                            <p class="text-[10px] text-slate-400">Menghapus akun aktif ini secara permanen dari Firebase Auth beserta seluruh data transaksinya.</p>
+                            <p class="text-[10px] text-slate-400">Menghapus akun aktif ini beserta transaksinya dari sistem.</p>
                             <button onclick="hapusAkunDanDataFirebase()" class="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs py-2 rounded font-medium shadow transition">
                                 Hapus Akun & Data Saya
                             </button>
@@ -498,7 +506,7 @@
 
                         <div class="bg-slate-800 p-3 rounded-lg space-y-1.5 border border-slate-700">
                             <span class="text-[11px] font-bold text-purple-400 block"><i class="fa-solid fa-broom mr-1"></i> Pemeliharaan Database (Hapus Sampah)</span>
-                            <p class="text-[10px] text-slate-400">Menghapus data transaksi dari akun/email yang sudah tidak terdaftar di sistem.</p>
+                            <p class="text-[10px] text-slate-400">Menghapus data transaksi dari akun/email yang sudah tidak terdaftar.</p>
                             <button onclick="bersihkanSampahDatabase()" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs py-2 rounded font-medium shadow transition">
                                 Bersihkan Sampah Data
                             </button>
@@ -531,7 +539,7 @@
                         <input type="text" id="cfgNamaOutlet" value="Arna Toys Pusat" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Logo Gambar Outlet (Pilih dari Penyimpanan)</label>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Logo Gambar Outlet</label>
                         <input type="file" id="cfgLogoFile" accept="image/*" onchange="previewAndSaveLogo(event)" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                     </div>
                     <button onclick="simpanIdentitasOutlet()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium text-sm py-2.5 rounded-lg shadow transition">
@@ -551,7 +559,7 @@
                     </div>
                 </div>
 
-                <!-- PANEL LISENSI & LEGALITAS APLIKASI -->
+                <!-- PANEL LISENSI -->
                 <div class="bg-gradient-to-br from-slate-50 to-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm space-y-3">
                     <h3 class="text-xs font-bold text-blue-900 uppercase border-b border-blue-200 pb-2"><i class="fa-solid fa-file-contract text-blue-600 mr-1"></i> Lisensi & Legalitas Aplikasi</h3>
                     <p class="text-xs text-gray-600">Arna Toys - Konsinyasi & Sistem Retail (CRS) dikembangkan oleh <strong>Deri Septian Maulana</strong>.</p>
@@ -563,7 +571,7 @@
 
         </main>
 
-        <!-- BOTTOM NAVIGATION BAR (FIXED & 6 KOLOM TERBARU) -->
+        <!-- BOTTOM NAVIGATION BAR (DENGAN LOGO CANDLE TERPERBAIKI) -->
         <nav class="bg-white border-t border-gray-200 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl grid grid-cols-6 py-2 px-1 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:rounded-b-2xl">
             <button onclick="switchTab('Dashboard')" id="navTabDashboard" class="flex flex-col items-center justify-center text-blue-600 py-1 transition">
                 <i class="fa-solid fa-chart-pie text-sm md:text-base mb-0.5"></i>
@@ -578,7 +586,8 @@
                 <span class="text-[8px] md:text-xs font-medium">Aktivitas</span>
             </button>
             <button onclick="switchTab('Candle')" id="navTabCandle" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
-                <i class="fa-solid fa-chart-candlestick text-sm md:text-base mb-0.5"></i>
+                <!-- LOGO CANDLE TERBARU BERSIH & JELAS -->
+                <i class="fa-solid fa-chart-line text-sm md:text-base mb-0.5"></i>
                 <span class="text-[8px] md:text-xs font-medium">Candle</span>
             </button>
             <button onclick="switchTab('Season')" id="navTabSeason" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
@@ -610,6 +619,42 @@
 
     </div>
 
+    <!-- MODAL DETAIL CANDLE KLIK -->
+    <div id="candleDetailModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 text-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center space-x-2">
+                    <div id="modalCandleDot" class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    <h3 id="modalCandlePeriod" class="font-bold text-sm text-slate-100">Detail Periode</h3>
+                </div>
+                <button onclick="toggleCandleDetailModal(false)" class="p-1 text-slate-400 hover:text-white rounded-lg">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="space-y-2.5 text-xs">
+                <div class="flex justify-between bg-slate-800/70 p-2.5 rounded-lg border border-slate-700/60">
+                    <span class="text-slate-400">Terjual (Pcs)</span>
+                    <span id="modalCandlePcs" class="font-bold text-white text-sm">0 Pcs</span>
+                </div>
+                <div class="flex justify-between bg-slate-800/70 p-2.5 rounded-lg border border-slate-700/60">
+                    <span class="text-blue-400">Total Omset (Rp)</span>
+                    <span id="modalCandleOmset" class="font-bold text-blue-300 text-sm">Rp 0</span>
+                </div>
+                <div class="flex justify-between bg-slate-800/70 p-2.5 rounded-lg border border-slate-700/60">
+                    <span class="text-emerald-400">Laba Bersih Murni</span>
+                    <span id="modalCandleLbMurni" class="font-bold text-emerald-300 text-sm">Rp 0</span>
+                </div>
+                <div class="flex justify-between bg-slate-800/70 p-2.5 rounded-lg border border-slate-700/60">
+                    <span class="text-amber-400">Laba Barang (Kotor)</span>
+                    <span id="modalCandleLbKotor" class="font-bold text-amber-300 text-sm">Rp 0</span>
+                </div>
+            </div>
+            <button onclick="toggleCandleDetailModal(false)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs py-2 rounded-lg transition">
+                Tutup
+            </button>
+        </div>
+    </div>
+
     <!-- MODAL DETAIL SEASON -->
     <div id="seasonModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
@@ -633,7 +678,7 @@
         </div>
     </div>
 
-    <!-- MODAL POPUP LISENSI (EULA) -->
+    <!-- MODAL LISENSI (EULA) -->
     <div id="licenseModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
@@ -649,24 +694,16 @@
                     <span class="inline-block bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">Lisensi Penggunaan Perorangan</span>
                 </div>
 
-                <p>Perjanjian Lisensi Pengguna Akhir ("EULA") ini adalah perjanjian hukum antara Anda (selaku Pengguna Perorangan) dengan <strong>Deri Septian Maulana</strong> selaku pencipta dan pemegang hak cipta tunggal atas aplikasi PWA <strong>Arna Toys</strong> dalam proyek <strong>CRS (Consignment Retail System)</strong>.</p>
+                <p>Perjanjian Lisensi Pengguna Akhir ("EULA") ini adalah perjanjian hukum antara Anda dengan <strong>Deri Septian Maulana</strong> selaku pencipta dan pemegang hak cipta tunggal atas aplikasi PWA <strong>Arna Toys</strong> dalam proyek <strong>CRS (Consignment Retail System)</strong>.</p>
                 
                 <h5 class="font-bold text-gray-900 mt-2">1. Pemberian Lisensi</h5>
-                <p>Dengan menginstal, mengakses, atau menggunakan aplikasi Arna Toys, Anda diberikan lisensi non-eksklusif, tidak dapat dialihkan, dan terbatas untuk menggunakan aplikasi ini semata-mata guna membantu penghitungan dan pemantauan usaha perorangan Anda.</p>
+                <p>Aplikasi ini diberikan secara eksklusif bagi pemantauan performa usaha konsinyasi perorangan Anda.</p>
 
                 <h5 class="font-bold text-gray-900 mt-2">2. Batasan Penggunaan</h5>
-                <p>Anda <strong>TIDAK</strong> diizinkan untuk:</p>
                 <ul class="list-disc pl-4 space-y-1">
-                    <li>Menjual kembali, menyewakan, meminjamkan, mendistribusikan, atau mensublisensikan aplikasi ini kepada pihak lain tanpa izin tertulis dari Pembuat.</li>
-                    <li>Melakukan dekompilasi, <i>reverse engineering</i>, membongkar, atau mencoba mengekstrak kode sumber aplikasi.</li>
-                    <li>Menghapus atau mengubah atribut hak cipta, nama pembuat (Deri Septian Maulana), atau identitas proyek CRS pada aplikasi.</li>
+                    <li>Tidak diperbolehkan mendistribusikan ulang atau mendekompilasi kode program tanpa izin pengembang.</li>
+                    <li>Dilarang menghapus atribut hak cipta <strong>Deri Septian Maulana</strong>.</li>
                 </ul>
-
-                <h5 class="font-bold text-gray-900 mt-2">3. Hak Kekayaan Intelektual</h5>
-                <p>Seluruh hak cipta, hak milik intelektual, desain antarmuka, dan kode sumber aplikasi Arna Toys / CRS sepenuhnya adalah milik mutlak dari <strong>Deri Septian Maulana</strong>.</p>
-
-                <h5 class="font-bold text-gray-900 mt-2">4. Penafian Jaminan</h5>
-                <p>Aplikasi ini disediakan "sebagaimana adanya" tanpa jaminan apa pun, baik tersurat maupun tersirat. Pembuat tidak bertanggung jawab atas kerugian finansial, kehilangan data, atau kerusakan yang timbul akibat penggunaan atau ketidakmampuan menggunakan aplikasi ini.</p>
             </div>
             <div class="p-3 border-t bg-gray-50 flex justify-end">
                 <button onclick="toggleLicenseModal(false)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg font-medium transition">
@@ -676,7 +713,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT UTAMA & FIREBASE LOGIC -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyD7YYO9OMRQ9aKBWDvfhsuOPkGg5WL2C8c",
@@ -717,10 +754,13 @@
             seasons: []
         };
 
-        // CANDLE VIEW STATE
+        // CANDLE VIEW & INTERACTIVE STATE
         let candleState = {
             timeframe: 'hari', // hari, minggu, bulan, tahun
-            metric: 'pcs'      // pcs, rp, lb
+            metric: 'pcs',      // pcs, rp, lb
+            candles: [],
+            animProgress: 0,
+            animFrameId: null
         };
 
         let selectedModalSeason = null;
@@ -731,6 +771,10 @@
 
         function toggleSeasonModal(isOpen) {
             document.getElementById('seasonModal').classList.toggle('hidden', !isOpen);
+        }
+
+        function toggleCandleDetailModal(isOpen) {
+            document.getElementById('candleDetailModal').classList.toggle('hidden', !isOpen);
         }
 
         function playCashSound() {
@@ -853,7 +897,7 @@
                         setLogoUI(cfg.logoUrl);
                     }
                     if (appState.isAdmin && !appState.inspectingOutletId) {
-                        appState.config.stokDelta = cfg.stokDelta ?? appState.config.stokDelta;
+                        appState.config.stokDelta = cfg.stokDelta ?? 0;
                     }
                     updateUIConfigFields();
                     refreshDashboard();
@@ -866,6 +910,7 @@
                 const sVal = seasonSnap.val();
                 appState.seasons = sVal ? Object.keys(sVal).map(k => ({ id: k, ...sVal[k] })) : [];
                 renderRiwayatSeason();
+                renderCandleChart();
             });
 
             if (appState.isAdmin) {
@@ -1033,7 +1078,7 @@
 
         function hapusAkunDanDataFirebase() {
             if (!currentUser) return;
-            if (!confirm("PERINGATAN KRITIS: Akun dan seluruh data Anda di Firebase akan dihapus secara permanen. Lanjutkan?")) return;
+            if (!confirm("PERINGATAN KRITIS: Akun dan seluruh data Anda di Firebase akan dihapus permanen. Lanjutkan?")) return;
 
             let uid = currentUser.uid;
             Promise.all([
@@ -1041,8 +1086,8 @@
                 db.ref('outlets/' + uid).remove()
             ]).then(() => {
                 currentUser.delete().then(() => alert("Akun dan data berhasil dihapus permanen."))
-                .catch(err => alert("Gagal menghapus akun Auth: " + err.message));
-            }).catch(err => alert("Gagal menghapus data database: " + err.message));
+                .catch(err => alert("Gagal menghapus akun: " + err.message));
+            }).catch(err => alert("Gagal menghapus database: " + err.message));
         }
 
         function bersihkanSampahDatabase() {
@@ -1063,7 +1108,7 @@
                             countRemoved++;
                         }
                     });
-                    alert(`Pembersihan selesai! Berhasil menghapus ${countRemoved} data dari akun yang tidak terdaftar.`);
+                    alert(`Pembersihan selesai! Berhasil menghapus ${countRemoved} data.`);
                 });
             });
         }
@@ -1088,8 +1133,8 @@
             reader.onload = function(e) {
                 try {
                     let jsonData = JSON.parse(e.target.result);
-                    if (confirm("PERINGATAN: Memulihkan database akan menimpa seluruh data saat ini dengan data dari file cadangan. Lanjutkan?")) {
-                        db.ref().set(jsonData).then(() => alert("Pemulihan data (Restore) berhasil dilakukan!"))
+                    if (confirm("PERINGATAN: Memulihkan database akan menimpa seluruh data saat ini. Lanjutkan?")) {
+                        db.ref().set(jsonData).then(() => alert("Pemulihan data berhasil dilakukan!"))
                         .catch(err => alert("Gagal memulihkan data: " + err.message));
                     }
                 } catch (err) {
@@ -1112,6 +1157,12 @@
             document.getElementById('skTgl').value = today;
             
             document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+
+            // Setup Event Listener Klik untuk Canvas Candlestick
+            const canvas = document.getElementById('candleCanvas');
+            if (canvas) {
+                canvas.addEventListener('click', handleCandleCanvasClick);
+            }
         });
 
         function switchTab(tabName) {
@@ -1175,7 +1226,7 @@
                                         ${isCurrentInspected ? '• Sedang Dipantau' : 'Aktif Terhubung'}
                                     </span>
                                 </div>
-                                <button onclick="bukaDashboardOutletSpesifik('${uid}', '${namaOutlet}')" title="Tampilkan Data Outlet Ini Ke Dashboard" class="bg-blue-600 hover:bg-blue-700 text-white text-xs p-2 rounded-lg shadow transition">
+                                <button onclick="bukaDashboardOutletSpesifik('${uid}', '${namaOutlet}')" title="Pantau Outlet Ini" class="bg-blue-600 hover:bg-blue-700 text-white text-xs p-2 rounded-lg shadow transition">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
                             </div>
@@ -1196,6 +1247,7 @@
             document.getElementById('inspectBanner').classList.remove('hidden');
 
             toggleDrawer(false);
+            applyRoleUI();
             processAdminDataView();
             switchTab('Dashboard');
         }
@@ -1208,10 +1260,12 @@
             document.getElementById('dashTitleText').innerText = 'Ringkasan Kinerja Arna Toys';
             document.getElementById('inspectBanner').classList.add('hidden');
 
+            applyRoleUI();
             processAdminDataView();
             syncDataFromDB();
         }
 
+        // ================= KONTROL VISIBILITAS UI & ROLE ================= //
         function applyRoleUI() {
             const badge = document.getElementById('headerRoleBadge');
             const roleStatus = document.getElementById('roleStatusText');
@@ -1223,7 +1277,11 @@
             const adminTableActions = document.getElementById('adminTableActions');
             const thActionPenjualan = document.getElementById('thActionPenjualan');
             const adminEndSeasonAction = document.getElementById('adminEndSeasonAction');
-            
+
+            // CARD FORM INPUT
+            const cardPenjualanInput = document.getElementById('cardPenjualanInputContainer');
+            const cardAktivitasInput = document.getElementById('cardAktivitasInputContainer');
+
             if (appState.isAdmin) {
                 badge.innerText = 'Mode Admin';
                 badge.className = 'text-xs bg-blue-700 px-2 py-0.5 rounded-full font-medium';
@@ -1233,11 +1291,19 @@
                 outletStockPanel.classList.add('hidden');
                 adminConversionPanel.classList.remove('hidden');
                 adminMaintenanceSection.classList.remove('hidden');
-                
-                // Tampilkan fitur admin baru
                 adminTableActions.classList.remove('hidden');
                 thActionPenjualan.classList.remove('hidden');
                 adminEndSeasonAction.classList.remove('hidden');
+
+                // JIKA ADMIN SEDANG MEMANTAU OUTLET TERTENTU: TAMPILKAN INPUT
+                // JIKA BERADA DI PUSAT (SEMUA OUTLET): SEMBUNYIKAN INPUT
+                if (appState.inspectingOutletId) {
+                    cardPenjualanInput.classList.remove('hidden');
+                    cardAktivitasInput.classList.remove('hidden');
+                } else {
+                    cardPenjualanInput.classList.add('hidden');
+                    cardAktivitasInput.classList.add('hidden');
+                }
             } else {
                 badge.innerText = 'Mode Outlet';
                 badge.className = 'text-xs bg-emerald-700 px-2 py-0.5 rounded-full font-medium';
@@ -1247,12 +1313,15 @@
                 outletStockPanel.classList.remove('hidden');
                 adminConversionPanel.classList.add('hidden');
                 adminMaintenanceSection.classList.add('hidden');
-
-                // Sembunyikan fitur admin
                 adminTableActions.classList.add('hidden');
                 thActionPenjualan.classList.add('hidden');
                 adminEndSeasonAction.classList.add('hidden');
+
+                // Outlet biasa selalu memiliki form input
+                cardPenjualanInput.classList.remove('hidden');
+                cardAktivitasInput.classList.remove('hidden');
             }
+
             renderTabelPenjualan();
             refreshDashboard();
             renderCandleChart();
@@ -1260,7 +1329,7 @@
 
         function outletTambahStokPrompt() {
             let stokSekarang = hitungStokAktifFisik();
-            let input = prompt(`Stok tersisa saat ini: ${stokSekarang} Pcs.\nMasukkan jumlah penambahan stok (Pcs):`, "1000");
+            let input = prompt(`Stok tersisa saat ini: ${stokSekarang} Pcs.\nMasukkan penambahan stok (Pcs):`, "1000");
             if (input !== null) {
                 let addVal = parseFloat(input);
                 if (!isNaN(addVal) && addVal > 0) {
@@ -1274,7 +1343,7 @@
         function adminAdjustStok(mode) {
             let stokSekarang = hitungStokAktifFisik();
             let actionName = mode === 'tambah' ? 'penambahan' : 'pengurangan';
-            let targetLabel = appState.inspectingOutletId ? `Outlet ${appState.inspectingOutletName}` : "Gudang Akumulasi Admin";
+            let targetLabel = appState.inspectingOutletId ? `Outlet ${appState.inspectingOutletName}` : "Gudang Arna Toys";
             
             let input = prompt(`Stok ${targetLabel} saat ini: ${stokSekarang} Pcs.\nMasukkan jumlah ${actionName} stok (Pcs):`, "1000");
             if (input !== null) {
@@ -1295,16 +1364,22 @@
             }
         }
 
+        // ================= PERBAIKAN STOK DOUBLE DI MODE ADMIN ================= //
         function hitungStokAktifFisik() {
             let totalTerjual = 0;
             let totalStokKeluarNet = 0;
             let totalInitialStok = 0;
 
             if (appState.isAdmin && !appState.inspectingOutletId) {
-                Object.values(appState.rawOutletsData).forEach(out => {
-                    totalInitialStok += (out.stokDelta || 0);
-                });
-                totalInitialStok += (appState.config.stokDelta || 0);
+                const outletUids = Object.keys(appState.rawOutletsData || {});
+                if (outletUids.length > 0) {
+                    outletUids.forEach(uid => {
+                        const out = appState.rawOutletsData[uid];
+                        totalInitialStok += (out.stokDelta || 0);
+                    });
+                } else {
+                    totalInitialStok = (appState.config.stokDelta || 0);
+                }
             } else {
                 totalInitialStok = appState.config.stokDelta || 0;
             }
@@ -1339,7 +1414,7 @@
             
             document.getElementById('labelSatuanBawa').innerText = `Jumlah ${appState.config.satuanKemasan}`;
             saveDataToDB();
-            alert('Pengaturan konversi & nilai laba berhasil disinkronkan ke seluruh outlet!');
+            alert('Pengaturan konversi & nilai laba berhasil disimpan!');
         }
 
         function simpanIdentitasOutlet() {
@@ -1394,7 +1469,7 @@
                 sisa: sisaPcs,
                 terjual: terjualPcs,
                 totalRp,
-                outlet: appState.currentOutlet,
+                outlet: appState.inspectingOutletId ? appState.inspectingOutletName : appState.currentOutlet,
                 _ownerUid: uidTarget
             };
 
@@ -1405,7 +1480,7 @@
             saveDataToDB();
             
             playCashSound();
-            alert('Data penjualan berhasil disimpan secara real-time!');
+            alert('Data penjualan berhasil disimpan!');
         }
 
         function handlePengeluaranSubmit(e) {
@@ -1419,7 +1494,7 @@
                 keterangan: document.getElementById('exKet').value,
                 nominal: parseFloat(document.getElementById('exNominal').value) || 0,
                 sumber: document.getElementById('exSumber').value,
-                outlet: appState.currentOutlet,
+                outlet: appState.inspectingOutletId ? appState.inspectingOutletName : appState.currentOutlet,
                 _ownerUid: appState.inspectingOutletId || currentUser.uid
             });
             
@@ -1439,7 +1514,7 @@
                 tgl: document.getElementById('skTgl').value,
                 pcs: parseFloat(document.getElementById('skPcs').value) || 0,
                 keterangan: document.getElementById('skKet').value,
-                outlet: appState.currentOutlet,
+                outlet: appState.inspectingOutletId ? appState.inspectingOutletName : appState.currentOutlet,
                 _ownerUid: appState.inspectingOutletId || currentUser.uid
             });
             
@@ -1448,14 +1523,13 @@
             alert('Aktivitas stok keluar berhasil dicatat!');
         }
 
-        // FUNGSI HAPUS PENJUALAN (ADMIN ONLY)
         function hapusPenjualanItem(index, trxId) {
             if (!appState.isAdmin) {
-                alert("Hanya Admin yang memiliki hak untuk menghapus transaksi penjualan!");
+                alert("Hanya Admin yang dapat menghapus transaksi penjualan!");
                 return;
             }
 
-            if (!confirm("Apakah Anda yakin ingin menghapus data penjualan ini? Tindakan ini tidak dapat dibatalkan.")) return;
+            if (!confirm("Apakah Anda yakin ingin menghapus data penjualan ini?")) return;
 
             let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
             let targetTrx = listPenjualan[index];
@@ -1464,12 +1538,11 @@
             const ownerUid = targetTrx._ownerUid || appState.inspectingOutletId || currentUser.uid;
 
             if (appState.isAdmin && !appState.inspectingOutletId) {
-                // Hapus langsung dari outlet terkait di Firebase
                 db.ref(`outlets/${ownerUid}/penjualan`).once('value', snap => {
                     let outletList = snap.val() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
                     let filtered = outletList.filter(p => (trxId ? p.id !== trxId : (p.tgl !== targetTrx.tgl || p.sales !== targetTrx.sales || p.terjual !== targetTrx.terjual)));
                     db.ref(`outlets/${ownerUid}/penjualan`).set(filtered).then(() => {
-                        alert("Data penjualan berhasil dihapus dari sistem.");
+                        alert("Data penjualan berhasil dihapus.");
                     });
                 });
             } else {
@@ -1480,12 +1553,8 @@
             }
         }
 
-        // FUNGSI UNDUH PENJUALAN XLS (ADMIN ONLY)
         function downloadPenjualanXls() {
-            if (!appState.isAdmin) {
-                alert("Fitur unduh XLS hanya dapat diakses dalam mode admin!");
-                return;
-            }
+            if (!appState.isAdmin) return;
 
             let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
             if (listPenjualan.length === 0) {
@@ -1496,7 +1565,6 @@
             let tableHtml = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
-                    <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Riwayat Penjualan</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
                     <meta http-equiv="content-type" content="text/plain; charset=UTF-8"/>
                 </head>
                 <body>
@@ -1531,12 +1599,7 @@
                 `;
             });
 
-            tableHtml += `
-                        </tbody>
-                    </table>
-                </body>
-                </html>
-            `;
+            tableHtml += `</tbody></table></body></html>`;
 
             let blob = new Blob(["\ufeff" + tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
             let url = URL.createObjectURL(blob);
@@ -1649,8 +1712,7 @@
             if (outletDisplay) outletDisplay.innerText = `${stokAkhir} Pcs`;
         }
 
-        // ==================== LOGIKA FITUR SEASON & END SEASON ==================== //
-
+        // ================= LOGIKA FITUR SEASON & END SEASON ================= //
         function generateRekapFormat() {
             let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
             let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
@@ -1707,6 +1769,7 @@
             return formatStr;
         }
 
+        // PERBAIKAN: END SEASON MENYIMPAN TRANSAKSI SECARA PERMANEN UNTUK GRAFIK CANDLE
         function handleEndSeasonPrompt() {
             if (!appState.isAdmin) {
                 alert("Hanya Admin yang dapat mengoperasikan End Season!");
@@ -1721,15 +1784,13 @@
                 return;
             }
 
-            if (!confirm("KONFIRMASI END SEASON:\n\nApakah Anda yakin ingin Mengakhiri Season ini?\n- Seluruh Omset, Penjualan, Laba, dan Aktivitas di SELURUH OUTLET akan direset ke 0.\n- Sisa stok gudang aktif saat ini akan tetap dipertahankan untuk Season baru.\n- Rekap data akan otomatis diarsipkan ke Card Riwayat Season.\n\nLanjutkan?")) {
+            if (!confirm("KONFIRMASI END SEASON:\n\n- Data penjualan dan pengeluaran musim ini akan diarsipkan ke Season History.\n- Data Candlestick TIDAK AKAN HILANG dan terus tersambung.\n- Stok fisik tiap outlet TIDAK AKAN DOUBLE di mode Admin.\n\nLanjutkan?")) {
                 return;
             }
 
-            // Tentukan rentang tanggal
             let allDates = [];
             listPenjualan.forEach(p => { if (p.tgl) allDates.push(p.tgl); });
             listAktivitas.forEach(a => { if (a.tgl) allDates.push(a.tgl); });
-
             allDates.sort();
 
             const formatDateIndo = (dStr) => {
@@ -1752,16 +1813,16 @@
                 createdDate: new Date().toLocaleString('id-ID'),
                 rekapText: finalRekapText,
                 omsetStr: document.getElementById('dashOmset').innerText,
-                terjualStr: document.getElementById('dashTerjual').innerText
+                terjualStr: document.getElementById('dashTerjual').innerText,
+                penjualanSnapshot: listPenjualan // Disimpan agar grafik Candle tetap abadi
             };
 
-            // Simpan ke Riwayat Season Firebase
             db.ref('seasons').push(seasonRecord).then(() => {
-                // Eksekusi Reset ke Semua Cabang Outlet
                 db.ref('outlets').once('value', snapshot => {
                     let allOutlets = snapshot.val() || {};
                     let updates = {};
 
+                    // Reset transaksi per-outlet dan set sisa stok fisik riil
                     Object.keys(allOutlets).forEach(uid => {
                         let out = allOutlets[uid];
                         let currentStokGudang = out.stokDelta || 0;
@@ -1781,18 +1842,16 @@
 
                         let sisaStokFisik = Math.max(0, currentStokGudang - sTerjual - sNet);
 
-                        // Reset transaksi, pertahankan sisa fisik sebagai stokDelta awal
                         updates[`outlets/${uid}/penjualan`] = [];
                         updates[`outlets/${uid}/aktivitas`] = [];
                         updates[`outlets/${uid}/stokDelta`] = sisaStokFisik;
                     });
 
-                    // Reset admin config stokDelta
-                    let adminStokFisik = hitungStokAktifFisik();
-                    updates['admin_config/stokDelta'] = adminStokFisik;
+                    // PERBAIKAN STOK DOUBLE: Admin config stokDelta diatur 0 agar tidak menggandakan stok outlet
+                    updates['admin_config/stokDelta'] = 0;
 
                     db.ref().update(updates).then(() => {
-                        alert(`Sukses! ${seasonCardTitle} berhasil diakhiri.\nSeluruh data transaksi outlet telah direset untuk menyambut Season baru.`);
+                        alert(`Sukses! ${seasonCardTitle} berhasil diakhiri.\nData candle tetap utuh dan stok tidak berlipat.`);
                         generateRekapFormat();
                     });
                 });
@@ -1810,7 +1869,7 @@
             }
 
             let htmlStr = '';
-            appState.seasons.slice().reverse().forEach((s, idx) => {
+            appState.seasons.slice().reverse().forEach((s) => {
                 htmlStr += `
                     <div onclick="bukaModalDetailSeason('${s.id}')" class="bg-white border border-slate-200 hover:border-blue-500 rounded-xl p-3 shadow-sm cursor-pointer transition transform hover:-translate-y-0.5">
                         <div class="flex items-center justify-between">
@@ -1873,21 +1932,16 @@
             anchor.remove();
         }
 
-        // ==================== LOGIKA FITUR CANDLESTICK CHART ==================== //
-
+        // ================= LOGIKA GRAFIS CANDLESTICK TERBARU & INTERAKTIF ================= //
         function setCandleTimeframe(tf) {
             candleState.timeframe = tf;
             ['hari', 'minggu', 'bulan', 'tahun'].forEach(t => {
                 let btn = document.getElementById('btnTf' + t.charAt(0).toUpperCase() + t.slice(1));
                 if (btn) {
-                    if (t === tf) {
-                        btn.className = "px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow font-semibold";
-                    } else {
-                        btn.className = "px-2.5 py-1 rounded-lg text-gray-600 font-semibold";
-                    }
+                    btn.className = (t === tf) ? "px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow font-semibold" : "px-2.5 py-1 rounded-lg text-gray-600 font-semibold";
                 }
             });
-            renderCandleChart();
+            startCandleAnimation();
         }
 
         function setCandleMetric(metric) {
@@ -1898,71 +1952,98 @@
             ['pcs', 'rp', 'lb'].forEach(m => {
                 let btn = document.getElementById('btnMet' + m.charAt(0).toUpperCase() + m.slice(1));
                 if (btn) {
-                    if (m === metric) {
-                        btn.className = "py-2 px-3 border-b-2 border-blue-600 text-blue-600 font-bold";
-                    } else {
-                        btn.className = "py-2 px-3 text-gray-400";
-                    }
+                    btn.className = (m === metric) ? "py-2 px-3 border-b-2 border-blue-600 text-blue-600 font-bold" : "py-2 px-3 text-gray-400";
                 }
             });
-            renderCandleChart();
+            startCandleAnimation();
+        }
+
+        // MENGUMPULKAN SELURUH DATA TRANSAKSI PENJUALAN (TERMASUK ARSIP SEASON)
+        function getAllPenjualanIncludingHistorical() {
+            let combined = [];
+
+            // 1. Data dari Season-season sebelumnya (History)
+            if (Array.isArray(appState.seasons)) {
+                appState.seasons.forEach(s => {
+                    if (s.penjualanSnapshot && Array.isArray(s.penjualanSnapshot)) {
+                        combined = combined.concat(s.penjualanSnapshot);
+                    }
+                });
+            }
+
+            // 2. Data dari Season yang sedang berjalan aktif
+            let listAktif = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            combined = combined.concat(listAktif);
+
+            return combined;
+        }
+
+        function startCandleAnimation() {
+            candleState.animProgress = 0;
+            if (candleState.animFrameId) cancelAnimationFrame(candleState.animFrameId);
+
+            const animate = () => {
+                candleState.animProgress += 0.08;
+                if (candleState.animProgress >= 1) {
+                    candleState.animProgress = 1;
+                    drawCandleChart(1);
+                } else {
+                    drawCandleChart(candleState.animProgress);
+                    candleState.animFrameId = requestAnimationFrame(animate);
+                }
+            };
+            candleState.animFrameId = requestAnimationFrame(animate);
         }
 
         function renderCandleChart() {
+            startCandleAnimation();
+        }
+
+        function drawCandleChart(progress) {
             const canvas = document.getElementById('candleCanvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
 
-            // Responsive high-DPI scaling
             const dpr = window.devicePixelRatio || 1;
             const rect = canvas.getBoundingClientRect();
             canvas.width = (rect.width || 600) * dpr;
-            canvas.height = 250 * dpr;
+            canvas.height = 280 * dpr;
             ctx.scale(dpr, dpr);
 
             const width = rect.width || 600;
-            const height = 250;
+            const height = 280;
 
-            let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
-            let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
+            const allPenjualan = getAllPenjualanIncludingHistorical();
 
-            // Hitung Nominal Total untuk Kartu di Bawah Papan Candle
-            let totalPcs = 0;
-            let totalOmset = 0;
-            let totalPengeluaranLb = 0;
-
-            listPenjualan.forEach(p => {
+            // Hitung akumulasi untuk kartu di bawah papan candle
+            let totalPcs = 0, totalOmset = 0;
+            allPenjualan.forEach(p => {
                 totalPcs += (p.terjual || 0);
                 totalOmset += (p.totalRp || 0);
             });
 
-            listAktivitas.forEach(a => {
-                if (a.tipe === 'pengeluaran' && a.sumber === 'laba_bersih') {
-                    totalPengeluaranLb += (a.nominal || 0);
-                }
-            });
-
             const lbMurniPerPcs = appState.config.manualLabaBersih || 400;
+            const lbKotorPerPcs = appState.config.manualLabaBarang || 500;
             const totalLbMurni = totalPcs * lbMurniPerPcs;
-            const totalLbSetelahPotong = Math.max(0, totalLbMurni - totalPengeluaranLb);
+            const totalLbKotor = totalPcs * lbKotorPerPcs;
 
             document.getElementById('candleTotalPcs').innerText = `${totalPcs.toLocaleString('id-ID')} Pcs`;
             document.getElementById('candleTotalOmset').innerText = `Rp ${totalOmset.toLocaleString('id-ID')}`;
             document.getElementById('candleTotalLbMurni').innerText = `Rp ${totalLbMurni.toLocaleString('id-ID')}`;
-            document.getElementById('candleTotalLbSetelahPotong').innerText = `Rp ${totalLbSetelahPotong.toLocaleString('id-ID')}`;
+            document.getElementById('candleTotalLabaBarang').innerText = `Rp ${totalLbKotor.toLocaleString('id-ID')}`;
 
-            // KELOMPOKKAN DATA MENJADI LILIN (OHLC)
+            // PENGELOMPOKAN DATA
             let groupedMap = {};
             const tf = candleState.timeframe;
 
-            listPenjualan.forEach(item => {
+            allPenjualan.forEach(item => {
                 if (!item.tgl) return;
                 const d = new Date(item.tgl);
                 if (isNaN(d)) return;
 
                 let key = '';
                 if (tf === 'hari') {
-                    key = item.tgl; // per tanggal
+                    key = item.tgl;
                 } else if (tf === 'minggu') {
                     const firstDayOfYear = new Date(d.getFullYear(), 0, 1);
                     const pastDaysOfYear = (d - firstDayOfYear) / 86400000;
@@ -1974,50 +2055,66 @@
                     key = `${d.getFullYear()}`;
                 }
 
-                if (!groupedMap[key]) groupedMap[key] = [];
+                if (!groupedMap[key]) {
+                    groupedMap[key] = {
+                        vals: [],
+                        totalPcs: 0,
+                        totalRp: 0
+                    };
+                }
 
                 let val = 0;
                 if (candleState.metric === 'pcs') val = item.terjual || 0;
                 else if (candleState.metric === 'rp') val = item.totalRp || 0;
                 else if (candleState.metric === 'lb') val = (item.terjual || 0) * lbMurniPerPcs;
 
-                groupedMap[key].push(val);
+                groupedMap[key].vals.push(val);
+                groupedMap[key].totalPcs += (item.terjual || 0);
+                groupedMap[key].totalRp += (item.totalRp || 0);
             });
 
             let keys = Object.keys(groupedMap).sort();
-            
-            // JIKA DATA KOSONG, TAMPILKAN PLACEHOLDER
+
             if (keys.length === 0) {
                 ctx.clearRect(0, 0, width, height);
                 ctx.fillStyle = "#64748B";
                 ctx.font = "12px sans-serif";
                 ctx.textAlign = "center";
-                ctx.fillText("Belum ada data transaksi penjualan untuk ditampilkan.", width / 2, height / 2);
+                ctx.fillText("Belum ada data penjualan. Data candle akan bertambah dari season ke season.", width / 2, height / 2);
+                candleState.candles = [];
                 return;
             }
 
-            // Batasi hingga 15 lilin terakhir agar grafik tetap rapi
-            if (keys.length > 15) keys = keys.slice(-15);
+            if (keys.length > 16) keys = keys.slice(-16);
 
-            let candleData = keys.map(k => {
-                let vals = groupedMap[k];
+            let candles = keys.map(k => {
+                let info = groupedMap[k];
+                let vals = info.vals;
                 let open = vals[0];
                 let close = vals[vals.length - 1];
                 let high = Math.max(...vals);
                 let low = Math.min(...vals);
 
-                // Variasi lilin jika transaksi tunggal
                 if (open === close && high === low) {
                     high = Math.round(high * 1.15);
                     low = Math.round(low * 0.85);
                 }
 
-                return { label: k, open, close, high, low };
+                return {
+                    label: k,
+                    open,
+                    close,
+                    high,
+                    low,
+                    totalPcs: info.totalPcs,
+                    totalRp: info.totalRp,
+                    lbMurni: info.totalPcs * lbMurniPerPcs,
+                    lbKotor: info.totalPcs * lbKotorPerPcs
+                };
             });
 
-            // Tentukan min dan max untuk sumbu Y
-            let minVal = Math.min(...candleData.map(c => c.low));
-            let maxVal = Math.max(...candleData.map(c => c.high));
+            let minVal = Math.min(...candles.map(c => c.low));
+            let maxVal = Math.max(...candles.map(c => c.high));
             if (minVal === maxVal) {
                 minVal = 0;
                 maxVal = maxVal || 100;
@@ -2028,14 +2125,14 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            // GAMBAR GRID & GARIS BANTU
+            // GRID LATAR
             ctx.strokeStyle = '#1E293B';
             ctx.lineWidth = 1;
             const gridLines = 4;
             for (let i = 0; i <= gridLines; i++) {
-                let y = 20 + ((height - 60) / gridLines) * i;
+                let y = 20 + ((height - 65) / gridLines) * i;
                 ctx.beginPath();
-                ctx.moveTo(30, y);
+                ctx.moveTo(35, y);
                 ctx.lineTo(width - 20, y);
                 ctx.stroke();
 
@@ -2043,40 +2140,62 @@
                 ctx.fillStyle = '#64748B';
                 ctx.font = '9px monospace';
                 ctx.textAlign = 'right';
-                ctx.fillText(Math.round(valAtGrid).toLocaleString('id-ID'), 26, y + 3);
+                ctx.fillText(Math.round(valAtGrid).toLocaleString('id-ID'), 30, y + 3);
             }
 
-            // GAMBAR LILIN (CANDLESTICKS)
-            const chartAreaWidth = width - 60;
-            const step = chartAreaWidth / candleData.length;
-            const candleWidth = Math.max(6, Math.min(22, step * 0.55));
+            // RENDERING CANDLE DENGAN EASE ANIMASI
+            const chartAreaWidth = width - 65;
+            const step = chartAreaWidth / candles.length;
+            const candleWidth = Math.max(8, Math.min(22, step * 0.6));
+            const baseY = 20 + (height - 65);
 
-            candleData.forEach((c, idx) => {
+            candleState.candles = [];
+
+            candles.forEach((c, idx) => {
                 let cx = 45 + step * idx + step / 2;
                 let isUp = c.close >= c.open;
                 let color = isUp ? '#10B981' : '#F43F5E';
 
-                const getY = val => 20 + (height - 60) * (1 - (val - minVal) / (maxVal - minVal));
+                const getY = val => 20 + (height - 65) * (1 - (val - minVal) / (maxVal - minVal));
 
-                let yHigh = getY(c.high);
-                let yLow = getY(c.low);
-                let yOpen = getY(c.open);
-                let yClose = getY(c.close);
+                let targetYHigh = getY(c.high);
+                let targetYLow = getY(c.low);
+                let targetYOpen = getY(c.open);
+                let targetYClose = getY(c.close);
 
-                // Garis Sumbu (Wick)
+                // Penerapan Interpolasi Animasi (Lerp)
+                let yHigh = baseY - (baseY - targetYHigh) * progress;
+                let yLow = baseY - (baseY - targetYLow) * progress;
+                let yOpen = baseY - (baseY - targetYOpen) * progress;
+                let yClose = baseY - (baseY - targetYClose) * progress;
+
+                // Gambar Garis Sumbu (Wick)
                 ctx.strokeStyle = color;
-                ctx.lineWidth = 1.8;
+                ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(cx, yHigh);
                 ctx.lineTo(cx, yLow);
                 ctx.stroke();
 
-                // Badan Lilin (Body)
+                // Gambar Badan Lilin (Body)
                 let bodyTop = Math.min(yOpen, yClose);
                 let bodyHeight = Math.max(3, Math.abs(yClose - yOpen));
 
                 ctx.fillStyle = color;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 6;
                 ctx.fillRect(cx - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+                ctx.shadowBlur = 0; // reset shadow
+
+                // Simpan koordinat untuk event klik
+                candleState.candles.push({
+                    x: cx - candleWidth / 2 - 4,
+                    y: yHigh,
+                    w: candleWidth + 8,
+                    h: Math.max(yLow - yHigh, bodyHeight + 10),
+                    data: c,
+                    isUp
+                });
 
                 // Label Sumbu X
                 ctx.fillStyle = '#94A3B8';
@@ -2085,6 +2204,33 @@
                 let shortLabel = c.label.length > 8 ? c.label.substring(5) : c.label;
                 ctx.fillText(shortLabel, cx, height - 15);
             });
+        }
+
+        // EVENT KLIK PADA CANDLE UNTUK MEMUNCULKAN DETAIL LENGKAP
+        function handleCandleCanvasClick(event) {
+            const canvas = document.getElementById('candleCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+
+            const clicked = candleState.candles.find(c => 
+                clickX >= c.x && clickX <= (c.x + c.w) &&
+                clickY >= c.y && clickY <= (c.y + c.h)
+            );
+
+            if (clicked) {
+                const item = clicked.data;
+                document.getElementById('modalCandlePeriod').innerText = `Periode: ${item.label}`;
+                document.getElementById('modalCandlePcs').innerText = `${item.totalPcs.toLocaleString('id-ID')} Pcs`;
+                document.getElementById('modalCandleOmset').innerText = `Rp ${item.totalRp.toLocaleString('id-ID')}`;
+                document.getElementById('modalCandleLbMurni').innerText = `Rp ${item.lbMurni.toLocaleString('id-ID')}`;
+                document.getElementById('modalCandleLbKotor').innerText = `Rp ${item.lbKotor.toLocaleString('id-ID')}`;
+                
+                const dot = document.getElementById('modalCandleDot');
+                dot.className = clicked.isUp ? 'w-3 h-3 rounded-full bg-emerald-500' : 'w-3 h-3 rounded-full bg-rose-500';
+
+                toggleCandleDetailModal(true);
+            }
         }
     </script>
 
