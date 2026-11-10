@@ -178,7 +178,7 @@
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label id="labelSatuanBawa" class="block text-xs font-semibold text-gray-600 mb-1">Jumlah Terpal/Pack</label>
+                                <label id="labelSatuanBawa" class="block text-xs font-semibold text-gray-600 mb-1">Jumlah Terpal/Pack/Papan/Gantung</label>
                                 <input type="number" id="pJumlahBawa" placeholder="0" min="1" required oninput="hitungKonversiBawa()" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                 <span id="previewKonversiBawa" class="text-[10px] text-gray-500 mt-1 block">Setara: 0 Pcs</span>
                             </div>
@@ -402,10 +402,96 @@
                             <i class="fa-solid fa-copy mr-1"></i> Salin Teks
                         </button>
                     </div>
-                    <textarea id="rekapTextArea" readonly rows="12" class="w-full text-xs font-mono bg-gray-50 border rounded-lg p-2.5 focus:outline-none text-gray-700 select-all"></textarea>
+                    <textarea id="rekapTextArea" readonly rows="14" class="w-full text-xs font-mono bg-gray-50 border rounded-lg p-2.5 focus:outline-none text-gray-700 select-all"></textarea>
                     <button onclick="downloadRekapTxt()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs py-2.5 rounded-lg shadow transition flex items-center justify-center">
                         <i class="fa-solid fa-file-arrow-down mr-1.5"></i> Unduh File Rekap (.txt)
                     </button>
+                </div>
+            </section>
+
+            <!-- TAB BARU: STOK (SETELAH SEASON) -->
+            <section id="tabStok" class="p-4 md:p-6 space-y-4 hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-boxes-stacked text-purple-600 mr-2"></i> Manajemen & Riwayat Stok
+                        </h2>
+                        <p class="text-xs text-gray-500">Kelola dan pantau mutasi stok gudang, penjualan, dan aktivitas outlet.</p>
+                    </div>
+                </div>
+
+                <!-- KARTU RINGKASAN STOK -->
+                <div class="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl p-5 text-white shadow-md flex justify-between items-center">
+                    <div>
+                        <span class="text-xs font-medium text-purple-200 uppercase tracking-wider block">Stok Gudang Aktif</span>
+                        <h3 id="tabStokDisplayReal" class="text-3xl font-extrabold mt-1">0 Pcs</h3>
+                        <span id="tabStokKonversiText" class="text-xs text-purple-200 mt-1 block">Setara: 0 Kemasan</span>
+                    </div>
+                    <div class="text-4xl text-purple-200/50">
+                        <i class="fa-solid fa-warehouse"></i>
+                    </div>
+                </div>
+
+                <!-- FORM INPUT PENAMBAHAN / PENGURANGAN STOK -->
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+                    <h3 class="text-xs font-bold text-gray-700 uppercase border-b pb-2 flex items-center">
+                        <i class="fa-solid fa-pen-to-square text-purple-600 mr-1.5"></i> Penyesuaian Stok Manual (Gudang)
+                    </h3>
+                    <form id="formPenyesuaianStok" onsubmit="handleMutasiStokSubmit(event)" class="space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
+                                <input type="date" id="stokInputTgl" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Aksi Mutasi</label>
+                                <select id="stokInputAksi" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                    <option value="tambah">Penambahan Stok (+)</option>
+                                    <option value="kurang">Pengurangan Stok (-)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Jumlah (Pcs)</label>
+                                <input type="number" id="stokInputPcs" placeholder="0" min="1" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Keterangan / Alasan (Wajib Diisi)</label>
+                            <input type="text" id="stokInputKet" placeholder="Contoh: Kiriman pabrik baru / Barang rusak gudang" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition flex items-center justify-center">
+                            <i class="fa-solid fa-floppy-disk mr-1.5"></i> Catat Mutasi Stok
+                        </button>
+                    </form>
+                </div>
+
+                <!-- RIWAYAT MUTASI LENGKAP -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase">
+                            <i class="fa-solid fa-clock-rotate-left mr-1.5 text-purple-600"></i> Riwayat Lengkap Perubahan & Mutasi Stok
+                        </h3>
+                        <span class="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-semibold">Semua Sumber</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 border-b">
+                                    <th class="p-2.5">Tanggal</th>
+                                    <th class="p-2.5">Sumber / Tipe</th>
+                                    <th class="p-2.5">Outlet</th>
+                                    <th class="p-2.5">Sales / Pelaksana</th>
+                                    <th class="p-2.5">Keterangan</th>
+                                    <th class="p-2.5 text-right">Mutasi Pcs</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableRiwayatStokBody" class="divide-y divide-gray-200 text-gray-700">
+                                <tr>
+                                    <td colspan="6" class="p-4 text-center text-gray-400 italic">Belum ada riwayat mutasi stok.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
@@ -413,22 +499,7 @@
             <section id="tabPengaturan" class="p-4 md:p-6 space-y-4 hidden">
                 <h2 class="text-lg font-bold text-gray-800">Pengaturan & Konversi Sistem</h2>
 
-                <!-- PANEL STOK OUTLET -->
-                <div id="outletStockPanel" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3 hidden">
-                    <h3 class="text-xs font-bold text-emerald-700 uppercase border-b pb-2"><i class="fa-solid fa-boxes-stacked mr-1"></i> Manajemen Stok Gudang Outlet</h3>
-                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex justify-between items-center">
-                        <div>
-                            <span class="text-[10px] text-emerald-800 font-semibold uppercase block">Stok Gudang Saat Ini</span>
-                            <span id="outletDisplayStok" class="text-base font-bold text-emerald-900">0 Pcs</span>
-                        </div>
-                        <button onclick="outletTambahStokPrompt()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition">
-                            <i class="fa-solid fa-plus mr-1"></i> Tambah Stok
-                        </button>
-                    </div>
-                    <p class="text-[11px] text-gray-500 italic">*Nilai konversi sistem diatur secara terpusat oleh Admin.</p>
-                </div>
-
-                <!-- PANEL RESET PASSWORD SISTEM (TERBUKA UNTUK ADMIN MAUPUN OUTLET) -->
+                <!-- PANEL RESET PASSWORD SISTEM -->
                 <div id="panelResetPasswordGlobal" class="bg-gradient-to-br from-rose-50 to-amber-50 border border-rose-200 rounded-xl p-4 shadow-sm space-y-3">
                     <div class="flex items-center justify-between border-b border-rose-200 pb-2">
                         <h3 class="text-xs font-bold text-rose-800 uppercase flex items-center">
@@ -455,6 +526,8 @@
                                 <select id="cfgSatuanKemasan" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                     <option value="Terpal">Terpal</option>
                                     <option value="Pack">Pack</option>
+                                    <option value="Papan">Papan</option>
+                                    <option value="Gantung">Gantung</option>
                                 </select>
                             </div>
                             <div>
@@ -482,18 +555,6 @@
                         <button onclick="simpanKonfigurasi()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg shadow transition mt-2">
                             Simpan & Sinkronkan Pengaturan Ke Semua Outlet
                         </button>
-                    </div>
-
-                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm space-y-2">
-                        <h3 class="text-xs font-bold text-blue-800 uppercase border-b border-blue-200 pb-2"><i class="fa-solid fa-warehouse mr-1"></i> Kontrol Stok Gudang (Admin)</h3>
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button onclick="adminAdjustStok('tambah')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded-lg font-medium shadow">
-                                <i class="fa-solid fa-plus mr-1"></i> Tambah Stok
-                            </button>
-                            <button onclick="adminAdjustStok('kurang')" class="bg-red-600 hover:bg-red-700 text-white text-xs py-2 rounded-lg font-medium shadow">
-                                <i class="fa-solid fa-minus mr-1"></i> Kurangi Stok
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -587,8 +648,8 @@
 
         </main>
 
-        <!-- BOTTOM NAVIGATION BAR -->
-        <nav class="bg-white border-t border-gray-200 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl grid grid-cols-6 py-2 px-1 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:rounded-b-2xl">
+        <!-- BOTTOM NAVIGATION BAR (7 KOLOM DENGAN TAB STOK) -->
+        <nav class="bg-white border-t border-gray-200 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl grid grid-cols-7 py-2 px-1 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:rounded-b-2xl">
             <button onclick="switchTab('Dashboard')" id="navTabDashboard" class="flex flex-col items-center justify-center text-blue-600 py-1 transition">
                 <i class="fa-solid fa-chart-pie text-sm md:text-base mb-0.5"></i>
                 <span class="text-[8px] md:text-xs font-medium">Dashboard</span>
@@ -608,6 +669,11 @@
             <button onclick="switchTab('Season')" id="navTabSeason" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
                 <i class="fa-solid fa-calendar-check text-sm md:text-base mb-0.5"></i>
                 <span class="text-[8px] md:text-xs font-medium">Season</span>
+            </button>
+            <!-- TOMBOL TAB STOK BARU -->
+            <button onclick="switchTab('Stok')" id="navTabStok" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
+                <i class="fa-solid fa-boxes-stacked text-sm md:text-base mb-0.5"></i>
+                <span class="text-[8px] md:text-xs font-medium">Stok</span>
             </button>
             <button onclick="switchTab('Pengaturan')" id="navTabPengaturan" class="flex flex-col items-center justify-center text-gray-400 hover:text-gray-600 py-1 transition">
                 <i class="fa-solid fa-gear text-sm md:text-base mb-0.5"></i>
@@ -680,7 +746,7 @@
                 </button>
             </div>
             <div class="p-4 overflow-y-auto space-y-3 flex-1">
-                <textarea id="modalSeasonText" readonly rows="12" class="w-full text-xs font-mono bg-gray-50 border rounded-lg p-3 focus:outline-none text-gray-700"></textarea>
+                <textarea id="modalSeasonText" readonly rows="14" class="w-full text-xs font-mono bg-gray-50 border rounded-lg p-3 focus:outline-none text-gray-700"></textarea>
             </div>
             <div class="p-3 border-t bg-gray-50 flex justify-between gap-2">
                 <button onclick="downloadSpecificSeasonTxt()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-lg font-medium transition flex items-center">
@@ -814,7 +880,7 @@
 
         let currentUser = null;
         const SECRET_MAINTENANCE_PASS = "531208";
-        const DEFAULT_PUSA_WA = "081398166181"; // Nomor WhatsApp default terkunci untuk outlet
+        const DEFAULT_PUSA_WA = "081398166181";
         let lastPenjualanCount = -1;
 
         let appState = {
@@ -834,6 +900,7 @@
             },
             dataPenjualan: [],
             dataAktivitas: [],
+            dataMutasiStok: [], // Log mutasi manual stok
             seasons: []
         };
 
@@ -989,9 +1056,11 @@
                     }
                     if (appState.isAdmin && !appState.inspectingOutletId) {
                         appState.config.stokDelta = cfg.stokDelta ?? 0;
+                        appState.dataMutasiStok = cfg.mutasiStok ? (Array.isArray(cfg.mutasiStok) ? cfg.mutasiStok : Object.values(cfg.mutasiStok)) : [];
                     }
                     updateUIConfigFields();
                     refreshDashboard();
+                    renderRiwayatStok();
                 }
             });
 
@@ -1024,10 +1093,12 @@
 
                         appState.dataPenjualan = newPenjualan;
                         appState.dataAktivitas = outVal.aktivitas ? (Array.isArray(outVal.aktivitas) ? outVal.aktivitas : Object.values(outVal.aktivitas)) : [];
+                        appState.dataMutasiStok = outVal.mutasiStok ? (Array.isArray(outVal.mutasiStok) ? outVal.mutasiStok : Object.values(outVal.mutasiStok)) : [];
                         if (outVal.stokDelta !== undefined) appState.config.stokDelta = outVal.stokDelta;
                     } else {
                         appState.dataPenjualan = [];
                         appState.dataAktivitas = [];
+                        appState.dataMutasiStok = [];
                         appState.config.stokDelta = 0;
                         lastPenjualanCount = 0;
                     }
@@ -1035,6 +1106,7 @@
                     renderAktivitas();
                     refreshDashboard();
                     renderCandleChart();
+                    renderRiwayatStok();
                 });
             }
         }
@@ -1053,10 +1125,12 @@
 
                 appState.dataPenjualan = newPenjualan.map(item => ({ ...item, _ownerUid: appState.inspectingOutletId }));
                 appState.dataAktivitas = outletData.aktivitas ? (Array.isArray(outletData.aktivitas) ? outletData.aktivitas : Object.values(outletData.aktivitas)) : [];
+                appState.dataMutasiStok = outletData.mutasiStok ? (Array.isArray(outletData.mutasiStok) ? outletData.mutasiStok : Object.values(outletData.mutasiStok)) : [];
                 appState.config.stokDelta = outletData.stokDelta || 0;
             } else {
                 let combinedPenjualan = [];
                 let combinedAktivitas = [];
+                let combinedMutasi = [];
 
                 Object.keys(appState.rawOutletsData).forEach(uid => {
                     const outletData = appState.rawOutletsData[uid];
@@ -1068,6 +1142,10 @@
                         let aList = Array.isArray(outletData.aktivitas) ? outletData.aktivitas : Object.values(outletData.aktivitas);
                         aList.forEach(a => combinedAktivitas.push({ ...a, _ownerUid: uid }));
                     }
+                    if (outletData.mutasiStok) {
+                        let mList = Array.isArray(outletData.mutasiStok) ? outletData.mutasiStok : Object.values(outletData.mutasiStok);
+                        mList.forEach(m => combinedMutasi.push({ ...m, _ownerUid: uid }));
+                    }
                 });
 
                 if (lastPenjualanCount !== -1 && combinedPenjualan.length > lastPenjualanCount) {
@@ -1077,12 +1155,14 @@
 
                 appState.dataPenjualan = combinedPenjualan;
                 appState.dataAktivitas = combinedAktivitas;
+                appState.dataMutasiStok = combinedMutasi;
             }
 
             renderTabelPenjualan();
             renderAktivitas();
             refreshDashboard();
             renderCandleChart();
+            renderRiwayatStok();
         }
 
         function updateUIConfigFields() {
@@ -1102,6 +1182,7 @@
                     db.ref(`outlets/${appState.inspectingOutletId}`).update({
                         penjualan: appState.dataPenjualan || [],
                         aktivitas: appState.dataAktivitas || [],
+                        mutasiStok: appState.dataMutasiStok || [],
                         stokDelta: appState.config.stokDelta
                     });
                 } else {
@@ -1110,6 +1191,7 @@
                         satuanKemasan: appState.config.satuanKemasan,
                         isiPerSatuan: appState.config.isiPerSatuan,
                         stokDelta: appState.config.stokDelta,
+                        mutasiStok: appState.dataMutasiStok || [],
                         manualLabaBarang: appState.config.manualLabaBarang,
                         manualLabaBersih: appState.config.manualLabaBersih
                     });
@@ -1118,6 +1200,7 @@
                 db.ref(`outlets/${currentUser.uid}`).set({
                     penjualan: appState.dataPenjualan || [],
                     aktivitas: appState.dataAktivitas || [],
+                    mutasiStok: appState.dataMutasiStok || [],
                     stokDelta: appState.config.stokDelta || 0
                 });
             }
@@ -1246,10 +1329,11 @@
             document.getElementById('pTgl').value = today;
             document.getElementById('exTgl').value = today;
             document.getElementById('skTgl').value = today;
+            const stokDateInput = document.getElementById('stokInputTgl');
+            if (stokDateInput) stokDateInput.value = today;
             
             document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
 
-            // Setup Event Listener Klik untuk Canvas Candlestick
             const canvas = document.getElementById('candleCanvas');
             if (canvas) {
                 canvas.addEventListener('click', handleCandleCanvasClick);
@@ -1257,7 +1341,7 @@
         });
 
         function switchTab(tabName) {
-            ['Dashboard', 'Penjualan', 'Aktivitas', 'Candle', 'Season', 'Pengaturan'].forEach(t => {
+            ['Dashboard', 'Penjualan', 'Aktivitas', 'Candle', 'Season', 'Stok', 'Pengaturan'].forEach(t => {
                 document.getElementById('tab' + t)?.classList.add('hidden');
                 const navBtn = document.getElementById('navTab' + t);
                 if (navBtn) {
@@ -1275,6 +1359,7 @@
 
             if (tabName === 'Season') generateRekapFormat();
             if (tabName === 'Candle') renderCandleChart();
+            if (tabName === 'Stok') renderRiwayatStok();
         }
 
         function toggleDrawer(isOpen) {
@@ -1362,7 +1447,6 @@
             const roleStatus = document.getElementById('roleStatusText');
             const cardLaba = document.getElementById('cardLabaBersih');
             const hamburgerBtn = document.getElementById('btnHamburger');
-            const outletStockPanel = document.getElementById('outletStockPanel');
             const adminConversionPanel = document.getElementById('adminConversionPanel');
             const adminMaintenanceSection = document.getElementById('adminMaintenanceSection');
             const adminTableActions = document.getElementById('adminTableActions');
@@ -1379,7 +1463,6 @@
                 roleStatus.innerText = 'Status: Akses Admin Penuh';
                 cardLaba.style.display = 'block';
                 hamburgerBtn.style.display = 'block';
-                outletStockPanel.classList.add('hidden');
                 adminConversionPanel.classList.remove('hidden');
                 adminMaintenanceSection.classList.remove('hidden');
                 adminTableActions.classList.remove('hidden');
@@ -1404,7 +1487,6 @@
                 roleStatus.innerText = 'Status: Akses Terbatas (Outlet)';
                 cardLaba.style.display = 'none'; 
                 hamburgerBtn.style.display = 'none'; 
-                outletStockPanel.classList.remove('hidden');
                 adminConversionPanel.classList.add('hidden');
                 adminMaintenanceSection.classList.add('hidden');
                 adminTableActions.classList.add('hidden');
@@ -1423,43 +1505,163 @@
             renderTabelPenjualan();
             refreshDashboard();
             renderCandleChart();
+            renderRiwayatStok();
         }
 
-        function outletTambahStokPrompt() {
-            let stokSekarang = hitungStokAktifFisik();
-            let input = prompt(`Stok tersisa saat ini: ${stokSekarang} Pcs.\nMasukkan penambahan stok (Pcs):`, "1000");
-            if (input !== null) {
-                let addVal = parseFloat(input);
-                if (!isNaN(addVal) && addVal > 0) {
-                    appState.config.stokDelta += addVal;
-                    saveDataToDB();
-                    alert(`Berhasil menambahkan ${addVal} Pcs ke stok gudang outlet!`);
-                }
+        // ================= FUNGSI BARU MANAJEMEN STOK ================= //
+        function handleMutasiStokSubmit(e) {
+            e.preventDefault();
+            const tgl = document.getElementById('stokInputTgl').value;
+            const aksi = document.getElementById('stokInputAksi').value;
+            const pcs = parseFloat(document.getElementById('stokInputPcs').value) || 0;
+            const ket = document.getElementById('stokInputKet').value.trim();
+
+            if (!ket) {
+                alert("Keterangan wajib diisi sebelum menyimpan mutasi stok!");
+                return;
             }
-        }
 
-        function adminAdjustStok(mode) {
-            let stokSekarang = hitungStokAktifFisik();
-            let actionName = mode === 'tambah' ? 'penambahan' : 'pengurangan';
-            let targetLabel = appState.inspectingOutletId ? `Outlet ${appState.inspectingOutletName}` : "Gudang Arna Toys";
+            const currentStok = hitungStokAktifFisik();
+            if (aksi === 'kurang' && pcs > currentStok) {
+                alert(`Pengurangan stok (${pcs} Pcs) melebihi stok yang tersedia (${currentStok} Pcs)!`);
+                return;
+            }
+
+            if (!Array.isArray(appState.dataMutasiStok)) appState.dataMutasiStok = [];
+
+            const mutasiRecord = {
+                id: 'mut_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                tgl,
+                aksi,
+                pcs,
+                keterangan: ket,
+                outlet: appState.inspectingOutletId ? appState.inspectingOutletName : appState.currentOutlet,
+                pelaksana: currentUser ? currentUser.email : 'Petugas',
+                _ownerUid: appState.inspectingOutletId || currentUser.uid
+            };
+
+            appState.dataMutasiStok.push(mutasiRecord);
+
+            if (aksi === 'tambah') {
+                appState.config.stokDelta = (appState.config.stokDelta || 0) + pcs;
+            } else {
+                appState.config.stokDelta = (appState.config.stokDelta || 0) - pcs;
+            }
+
+            saveDataToDB();
+
+            document.getElementById('formPenyesuaianStok').reset();
+            document.getElementById('stokInputTgl').value = new Date().toISOString().split('T')[0];
             
-            let input = prompt(`Stok ${targetLabel} saat ini: ${stokSekarang} Pcs.\nMasukkan jumlah ${actionName} stok (Pcs):`, "1000");
-            if (input !== null) {
-                let val = parseFloat(input);
-                if (!isNaN(val) && val > 0) {
-                    if (mode === 'tambah') {
-                        appState.config.stokDelta += val;
-                    } else {
-                        if (val > stokSekarang) {
-                            alert("Jumlah pengurangan melebihi stok yang tersedia!");
-                            return;
-                        }
-                        appState.config.stokDelta -= val;
+            refreshDashboard();
+            renderRiwayatStok();
+            alert(`Mutasi ${aksi === 'tambah' ? 'penambahan' : 'pengurangan'} stok sebesar ${pcs} Pcs berhasil dicatat!`);
+        }
+
+        function kumpulkanSemuaRiwayatMutasiStok() {
+            let combined = [];
+
+            // 1. Mutasi Stok Manual Gudang
+            let mutasiList = Array.isArray(appState.dataMutasiStok) ? appState.dataMutasiStok : Object.values(appState.dataMutasiStok || {});
+            mutasiList.forEach(m => {
+                combined.push({
+                    tgl: m.tgl,
+                    sumber: m.aksi === 'tambah' ? 'Penambahan Gudang' : 'Pengurangan Gudang',
+                    tipeAksi: m.aksi === 'tambah' ? 'tambah' : 'kurang',
+                    outlet: m.outlet || 'Pusat',
+                    pelaksana: m.pelaksana || 'Petugas',
+                    keterangan: m.keterangan || '-',
+                    pcs: m.pcs || 0,
+                    deltaSign: m.aksi === 'tambah' ? '+' : '-'
+                });
+            });
+
+            // 2. Mutasi Otomatis dari Penjualan (Stok Berkurang)
+            let penjualanList = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
+            penjualanList.forEach(p => {
+                combined.push({
+                    tgl: p.tgl,
+                    sumber: 'Penjualan Retail',
+                    tipeAksi: 'kurang',
+                    outlet: p.outlet || 'Pusat',
+                    pelaksana: p.sales || 'Sales',
+                    keterangan: `Terjual ${p.terjual} Pcs (Bawa: ${p.bawaStr || '-'}, Sisa: ${p.sisa} Pcs)`,
+                    pcs: p.terjual || 0,
+                    deltaSign: '-'
+                });
+            });
+
+            // 3. Mutasi Otomatis dari Stok Keluar (wr+, wr×, wr-)
+            let aktivitasList = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
+            aktivitasList.forEach(a => {
+                if (a.tipe === 'stok_keluar') {
+                    let sign = '-';
+                    let label = `Stok Keluar (${a.subTipe})`;
+                    if (a.subTipe === 'wr-') {
+                        sign = '+';
+                        label = 'Stok Masuk (wr- Retur)';
                     }
-                    saveDataToDB();
-                    alert(`Stok ${targetLabel} berhasil diperbarui.`);
+                    combined.push({
+                        tgl: a.tgl,
+                        sumber: label,
+                        tipeAksi: a.subTipe === 'wr-' ? 'tambah' : 'kurang',
+                        outlet: a.outlet || 'Pusat',
+                        pelaksana: 'Outlet/Sales',
+                        keterangan: `${a.subTipe}: ${a.keterangan || '-'}`,
+                        pcs: a.pcs || 0,
+                        deltaSign: sign
+                    });
                 }
+            });
+
+            // Urutkan riwayat dari yang paling baru
+            combined.sort((a, b) => new Date(b.tgl) - new Date(a.tgl));
+            return combined;
+        }
+
+        function renderRiwayatStok() {
+            const tbody = document.getElementById('tableRiwayatStokBody');
+            if (!tbody) return;
+
+            const list = kumpulkanSemuaRiwayatMutasiStok();
+            const currentStok = hitungStokAktifFisik();
+            const isiPerSatuan = appState.config.isiPerSatuan || 50;
+            const satuan = appState.config.satuanKemasan || 'Terpal';
+
+            const displayReal = document.getElementById('tabStokDisplayReal');
+            const displayKonversi = document.getElementById('tabStokKonversiText');
+            if (displayReal) displayReal.innerText = `${currentStok.toLocaleString('id-ID')} Pcs`;
+            if (displayKonversi) displayKonversi.innerText = `Setara: ${(currentStok / isiPerSatuan).toFixed(1)} ${satuan}`;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400 italic">Belum ada riwayat mutasi stok.</td></tr>`;
+                return;
             }
+
+            let html = '';
+            list.forEach(item => {
+                const isPlus = item.deltaSign === '+';
+                const colorBadge = isPlus ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700';
+                const textDelta = isPlus ? 'text-emerald-600' : 'text-rose-600';
+                
+                html += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2.5 font-medium text-gray-700 whitespace-nowrap">${item.tgl}</td>
+                        <td class="p-2.5">
+                            <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${colorBadge}">
+                                ${item.sumber}
+                            </span>
+                        </td>
+                        <td class="p-2.5 font-semibold text-gray-800">${item.outlet}</td>
+                        <td class="p-2.5 text-gray-600">${item.pelaksana}</td>
+                        <td class="p-2.5 text-gray-600">${item.keterangan}</td>
+                        <td class="p-2.5 text-right font-bold ${textDelta}">
+                            ${item.deltaSign}${item.pcs.toLocaleString('id-ID')} Pcs
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
         }
 
         function hitungStokAktifFisik() {
@@ -1577,6 +1779,8 @@
             saveDataToDB();
             
             playCashSound();
+            refreshDashboard();
+            renderRiwayatStok();
             alert('Data penjualan berhasil disimpan!');
         }
 
@@ -1617,6 +1821,8 @@
             
             document.getElementById('formStokKeluar').reset();
             saveDataToDB();
+            refreshDashboard();
+            renderRiwayatStok();
             alert('Aktivitas stok keluar berhasil dicatat!');
         }
 
@@ -1804,15 +2010,13 @@
             document.getElementById('dashBarangHilang').innerText = `${totalPcsHilang} Pcs`;
             document.getElementById('dashNominalHilang').innerText = `Rp ${nominalKerugianHilang.toLocaleString('id-ID')} (Kerugian)`;
             document.getElementById('dashTerjual').innerText = `${totalTerjual} Pcs`;
-            
-            const outletDisplay = document.getElementById('outletDisplayStok');
-            if (outletDisplay) outletDisplay.innerText = `${stokAkhir} Pcs`;
         }
 
         // ================= LOGIKA FITUR SEASON & END SEASON ================= //
         function generateRekapFormat() {
             let listPenjualan = Array.isArray(appState.dataPenjualan) ? appState.dataPenjualan : Object.values(appState.dataPenjualan || {});
             let listAktivitas = Array.isArray(appState.dataAktivitas) ? appState.dataAktivitas : Object.values(appState.dataAktivitas || {});
+            let listMutasi = kumpulkanSemuaRiwayatMutasiStok();
 
             let totalOmset = 0, totalTerjual = 0;
             let totalPengeluaranLabaBersih = 0, totalPengeluaranLabaBarang = 0;
@@ -1843,7 +2047,7 @@
             const stokAkhir = hitungStokAktifFisik();
 
             let formatStr = `=== REKAPITULASI KINERJA RETAIL ARNA TOYS ===\n`;
-            formatStr += `Outlet / Cabang : ${appState.currentOutlet}\n`;
+            formatStr += `Outlet / Cabang : ${appState.inspectingOutletId ? appState.inspectingOutletName : appState.currentOutlet}\n`;
             formatStr += `Tanggal Cetak   : ${new Date().toLocaleString('id-ID')}\n`;
             formatStr += `----------------------------------------\n\n`;
 
@@ -1860,7 +2064,20 @@
             formatStr += `3. AKTIVITAS WARUNG (WR)\n`;
             formatStr += `   - Wr+ (Tambah)      : ${formatKonversiKemasan(pcsWrPlus)}\n`;
             formatStr += `   - Wr× (Hilang)      : ${formatKonversiKemasan(pcsWrX)}\n`;
-            formatStr += `   - Wr- (Retur/Stop)  : ${countWrMin} Warung\n`;
+            formatStr += `   - Wr- (Retur/Stop)  : ${countWrMin} Warung\n\n`;
+
+            formatStr += `4. RIWAYAT MUTASI STOK TERBARU (PENAMBAHAN / PENGURANGAN)\n`;
+            if (listMutasi.length === 0) {
+                formatStr += `   Belum ada mutasi stok yang tercatat.\n`;
+            } else {
+                listMutasi.slice(0, 10).forEach((m, idx) => {
+                    formatStr += `   ${idx + 1}. [${m.tgl}] [${m.outlet}] ${m.sumber} (${m.pelaksana})\n`;
+                    formatStr += `      Jumlah : ${m.deltaSign}${m.pcs} Pcs | Ket: ${m.keterangan}\n`;
+                });
+                if (listMutasi.length > 10) {
+                    formatStr += `   ...dan ${listMutasi.length - 10} riwayat lainnya.\n`;
+                }
+            }
 
             document.getElementById('rekapTextArea').value = formatStr;
             return formatStr;
@@ -1880,7 +2097,7 @@
                 return;
             }
 
-            if (!confirm("KONFIRMASI END SEASON:\n\n- Data penjualan dan pengeluaran musim ini akan diarsipkan ke Season History.\n- Data Candlestick TIDAK AKAN HILANG dan terus tersambung.\n- Stok fisik tiap outlet TIDAK AKAN DOUBLE di mode Admin.\n\nLanjutkan?")) {
+            if (!confirm("KONFIRMASI END SEASON:\n\n- Data penjualan, pengeluaran, dan mutasi musim ini akan diarsipkan ke Season History.\n- Data Candlestick TIDAK AKAN HILANG dan terus tersambung.\n- Stok fisik tiap outlet TIDAK AKAN DOUBLE di mode Admin.\n\nLanjutkan?")) {
                 return;
             }
 
@@ -1939,13 +2156,15 @@
 
                         updates[`outlets/${uid}/penjualan`] = [];
                         updates[`outlets/${uid}/aktivitas`] = [];
+                        updates[`outlets/${uid}/mutasiStok`] = [];
                         updates[`outlets/${uid}/stokDelta`] = sisaStokFisik;
                     });
 
                     updates['admin_config/stokDelta'] = 0;
+                    updates['admin_config/mutasiStok'] = [];
 
                     db.ref().update(updates).then(() => {
-                        alert(`Sukses! ${seasonCardTitle} berhasil diakhiri.\nData candle tetap utuh dan stok tidak berlipat.`);
+                        alert(`Sukses! ${seasonCardTitle} berhasil diakhiri.\nData candle tetap utuh dan riwayat stok telah diperbarui.`);
                         generateRekapFormat();
                     });
                 });
@@ -2344,10 +2563,8 @@
             const labelStatus = document.getElementById('labelStatusNomor');
             const hintNomor = document.getElementById('hintNomorOtp');
 
-            // Nomor penerima default selalu terisi 081398166181
             phoneInput.value = DEFAULT_PUSA_WA;
 
-            // Aturan hak akses nomor: Admin bebas edit, Outlet terkunci (Readonly)
             if (appState.isAdmin) {
                 phoneInput.removeAttribute('readonly');
                 phoneInput.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
@@ -2377,7 +2594,6 @@
         async function prosesKirimOtp() {
             let rawPhone = document.getElementById('otpPhoneInput').value.trim();
             
-            // Pengamanan sistem: jika bukan Admin, paksakan nomor ke nomor pusat
             if (!appState.isAdmin) {
                 rawPhone = DEFAULT_PUSA_WA;
             }
@@ -2399,7 +2615,7 @@
             const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
             otpData.code = generatedOtp;
             otpData.targetPhone = formattedPhone;
-            otpData.expiresAt = Date.now() + (2 * 60 * 1000); // Masa berlaku 2 menit
+            otpData.expiresAt = Date.now() + (2 * 60 * 1000);
 
             try {
                 const res = await kirimOtpFonnte(formattedPhone, generatedOtp);
@@ -2478,12 +2694,10 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan Perubahan...`;
 
             try {
-                // 1. Perbarui password otentikasi Firebase pada user yang sedang aktif login
                 if (currentUser) {
                     await currentUser.updatePassword(pass1);
                 }
 
-                // 2. Simpan jejak security update & sinkronisasi password global ke Realtime Database
                 const updatePayload = {
                     'system_security/lastPasswordReset': new Date().toISOString(),
                     'system_security/resetBy': currentUser ? currentUser.email : 'Pengguna',
@@ -2492,7 +2706,6 @@
                     'system_security/globalPassword': pass1
                 };
 
-                // 3. Update field password referensi pada seluruh pengguna di database
                 const usersSnap = await db.ref('users').once('value');
                 const usersData = usersSnap.val() || {};
                 Object.keys(usersData).forEach(uid => {
